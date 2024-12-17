@@ -1,10 +1,10 @@
 // src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MainLayout from '../src/components/layout/MainLayout/MainLayout';
-import { HomePage } from './pages/home/HomePage';
-import { ProductPage } from './pages/product/ProductPage';
-import { CartPage } from './pages/cart/CartPage';
+import MainLayout from './components/layout/MainLayout/MainLayout';
+import HomePage from './pages/home/HomePage';
+import ProductsPage from './pages/products/ProductsPage';
+import CartPage from './pages/cart/CartPage';
 
 function App() {
   return (
@@ -12,7 +12,7 @@ function App() {
       <MainLayout>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductPage />} />
+          <Route path="/products" element={<ProductsPage />} />
           <Route path="/cart" element={<CartPage />} />
         </Routes>
       </MainLayout>
