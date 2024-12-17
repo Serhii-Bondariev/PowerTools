@@ -1,12 +1,12 @@
 // src/services/api.js
 import axios from 'axios';
-import { API_URL } from '../utils/constants';
+import { MONGO_URI } from '../utils/constants';
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: MONGO_URI,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
 
 export const getProducts = async () => {
@@ -18,13 +18,3 @@ export const getProductById = async (id) => {
   const response = await api.get(`/products/${id}`);
   return response.data;
 };
-
-// src/services/api.js
-// export const api = {
-//   async getProduct(id) {
-//     // API logic
-//   },
-//   async getRelatedProducts(id) {
-//     // API logic
-//   }
-// };
