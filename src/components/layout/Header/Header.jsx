@@ -1,12 +1,12 @@
 // src/components/layout/Header/Header.jsx
-import { Search, ShoppingCart, Menu, X, LogOut } from "lucide-react";
-import React, { useState } from "react";
+import { Search, ShoppingCart, Menu, X, LogOut, HomeIcon, PackageOpen, LogIn } from 'lucide-react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <header className="bg-gray-900 text-white sticky top-0 z-50">
@@ -32,7 +32,10 @@ export function Header() {
             <Link to="/products" className="hover:text-gray-300 transition duration-150">
               Products
             </Link>
-            <Link to="/cart" className="hover:text-gray-300 transition duration-150 flex items-center">
+            <Link
+              to="/cart"
+              className="hover:text-gray-300 transition duration-150 flex items-center"
+            >
               <ShoppingCart className="h-5 w-5 mr-1" />
               Cart
             </Link>
@@ -91,11 +94,7 @@ export function Header() {
               aria-expanded="false"
             >
               <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
@@ -106,14 +105,16 @@ export function Header() {
             <div className="px-2 pt-2 pb-3 space-y-1">
               <Link
                 to="/"
-                className="block px-3 py-2 rounded-md hover:bg-gray-800 transition duration-150"
+                className="block px-3 py-2 rounded-md hover:bg-gray-800 transition duration-150 flex items-center"
               >
+                <HomeIcon className="h-5 w-5 mr-2" />
                 Home
               </Link>
               <Link
                 to="/products"
-                className="block px-3 py-2 rounded-md hover:bg-gray-800 transition duration-150"
+                className="block px-3 py-2 rounded-md hover:bg-gray-800 transition duration-150 flex items-center"
               >
+                <PackageOpen className="h-5 w-5 mr-2" />
                 Products
               </Link>
               <Link
@@ -140,9 +141,7 @@ export function Header() {
               <div className="pt-4 space-y-2">
                 {isLoggedIn ? (
                   <>
-                    <span className="block px-3 py-2 text-gray-300">
-                      John Doe
-                    </span>
+                    <span className="block px-3 py-2 text-gray-300">John Doe</span>
                     <button
                       onClick={() => setIsLoggedIn(false)}
                       className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-800 transition duration-150 flex items-center"
@@ -155,8 +154,9 @@ export function Header() {
                   <>
                     <Link
                       to="/login"
-                      className="block w-full px-3 py-2 rounded-md hover:bg-gray-800 transition duration-150"
+                      className="block w-full px-3 py-2 rounded-md hover:bg-gray-800 transition duration-150 flex items-center"
                     >
+                      <LogIn className="h-5 w-5 mr-2" />
                       Login
                     </Link>
                     <Link
