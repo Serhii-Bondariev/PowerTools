@@ -5,6 +5,7 @@ import MainLayout from './components/layout/MainLayout/MainLayout';
 import HomePage from './pages/home/HomePage';
 import ProductsPage from './pages/products/ProductsPage';
 import CartPage from './pages/cart/CartPage';
+import ContactPage from './pages/contacts/ContactPage';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/contacts" element={<ContactPage />} />
         </Routes>
       </MainLayout>
     </Router>

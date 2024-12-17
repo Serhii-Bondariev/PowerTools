@@ -16,9 +16,21 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-bold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><a href="/products" className="text-gray-400 hover:text-white">Products</a></li>
-              <li><a href="/cart" className="text-gray-400 hover:text-white">Cart</a></li>
-              <li><a href="/contact" className="text-gray-400 hover:text-white">Contact</a></li>
+              <li>
+                <a href="/products" className="text-gray-400 hover:text-white">
+                  Products
+                </a>
+              </li>
+              <li>
+                <a href="/cart" className="text-gray-400 hover:text-white">
+                  Cart
+                </a>
+              </li>
+              <li>
+                <a href="/contacts" className="text-gray-400 hover:text-white">
+                  Contact
+                </a>
+              </li>
             </ul>
           </div>
           <div>
