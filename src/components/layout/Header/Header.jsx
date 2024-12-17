@@ -1,5 +1,15 @@
 // src/components/layout/Header/Header.jsx
-import { Search, ShoppingCart, Menu, X, LogOut, HomeIcon, PackageOpen, LogIn } from 'lucide-react';
+import {
+  Search,
+  ShoppingCart,
+  Menu,
+  X,
+  LogOut,
+  HomeIcon,
+  PackageOpen,
+  LogIn,
+  UserRoundPlus,
+} from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -161,8 +171,9 @@ export function Header() {
                     </Link>
                     <Link
                       to="/register"
-                      className="block w-full px-3 py-2 bg-blue-600 rounded-md hover:bg-blue-700 transition duration-150"
+                      className="block w-full px-3 py-2 bg-blue-600 rounded-md hover:bg-blue-700 transition duration-150 flex items-center"
                     >
+                      <UserRoundPlus className="h-5 w-5 mr-2" />
                       Register
                     </Link>
                   </>
