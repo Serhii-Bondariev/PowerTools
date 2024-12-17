@@ -20,7 +20,7 @@ export function Header() {
                 alt="Hardware Store Logo"
                 className="h-8 w-auto"
               />
-              <span className="ml-2 text-xl font-bold">HardwareHub</span>
+              <span className="ml-2 mr-2 text-xl font-bold">HardwareHub</span>
             </Link>
           </div>
 

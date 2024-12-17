@@ -1,7 +1,7 @@
 // src/features/products/ProductGrid.jsx
 import React from 'react';
-import { ProductCard } from './ProductCard';
-import { ProductSkeleton } from './ProductSkeleton';
+import { ProductCard } from '../ProductCard/ProductCard';
+import { ProductSkeleton } from '../ProductSkeleton';
 
 export function ProductGrid({ products, isLoading }) {
   if (isLoading) {

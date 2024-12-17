@@ -1,36 +1,55 @@
 // src/components/common/Pagination.jsx
 import React from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function Pagination({ currentPage, setCurrentPage, totalPages }) {
+export function Pagination({
+  currentPage,
+  totalPages,
+  goToPage,
+  nextPage,
+  previousPage
+}) {
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
   return (
-    <nav className="flex items-center space-x-2">
+    <div className="flex justify-center items-center space-x-2 mt-8">
       <button
+        onClick={previousPage}
         disabled={currentPage === 1}
-        onClick={() => setCurrentPage(currentPage - 1)}
-        className="px-3 py-1 rounded-lg border hover:bg-gray-100 disabled:opacity-50"
+        className={`p-2 rounded-lg ${
+          currentPage === 1
+            ? 'text-gray-400 cursor-not-allowed'
+            : 'text-gray-700 hover:bg-gray-100'
+        }`}
       >
-        Previous
+        <ChevronLeft className="h-5 w-5" />
       </button>
 
-      {[...Array(totalPages)].map((_, i) => (
+      {pages.map(page => (
         <button
-          key={i + 1}
-          onClick={() => setCurrentPage(i + 1)}
-          className={`px-3 py-1 rounded-lg border ${
-            currentPage === i + 1 ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'
+          key={page}
+          onClick={() => goToPage(page)}
+          className={`px-4 py-2 rounded-lg ${
+            currentPage === page
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 hover:bg-gray-100'
           }`}
         >
-          {i + 1}
+          {page}
         </button>
       ))}
 
       <button
+        onClick={nextPage}
         disabled={currentPage === totalPages}
-        onClick={() => setCurrentPage(currentPage + 1)}
-        className="px-3 py-1 rounded-lg border hover:bg-gray-100 disabled:opacity-50"
+        className={`p-2 rounded-lg ${
+          currentPage === totalPages
+            ? 'text-gray-400 cursor-not-allowed'
+            : 'text-gray-700 hover:bg-gray-100'
+        }`}
       >
-        Next
+        <ChevronRight className="h-5 w-5" />
       </button>
-    </nav>
+    </div>
   );
 }
