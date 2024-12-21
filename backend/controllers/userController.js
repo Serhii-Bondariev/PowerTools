@@ -1,7 +1,7 @@
-// src/controllers/userController.js
+// backend/controllers/userController.js
 import asyncHandler from 'express-async-handler';
-import { User } from '../models/userModel';
-import { generateToken } from '../utils/generateToken';
+import { User } from '../models/userModel.js';
+import { generateToken } from '../utils/generateToken.js';
 
 export const registerUser = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
