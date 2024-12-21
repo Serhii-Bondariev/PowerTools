@@ -1,58 +1,101 @@
 // backend/controllers/userController.js
-import asyncHandler from 'express-async-handler';
 import { User } from '../models/userModel.js';
-import { generateToken } from '../utils/generateToken.js';
+import asyncHandler from 'express-async-handler';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-export const registerUser = asyncHandler(async (req, res) => {
+// Реєстрація користувача
+export const registerUser = async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
 
-  const userExists = await User.findOne({ email });
-  if (userExists) {
-    res.status(400);
-    throw new Error('User already exists');
+  if (!firstName || !lastName || !email || !password) {
+    return res.status(400).json({ message: 'Будь ласка, надайте всі необхідні дані' });
   }
 
-  const user = await User.create({
-    firstName,
-    lastName,
-    email,
-    password,
-    phone,
-  });
+  try {
+    // Перевірка, чи існує користувач з таким email
+    const userExists = await User.findOne({ email });
 
-  if (user) {
-    res.status(201).json({
-      _id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone,
-      isAdmin: user.isAdmin,
-      token: generateToken(user._id),
+    if (userExists) {
+      return res.status(400).json({ message: 'Користувач з таким email вже існує' });
+    }
+
+    // Створення нового користувача
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password,
+      phone,
     });
-  } else {
-    res.status(400);
-    throw new Error('Invalid user data');
+
+    // Збереження користувача
+    await user.save();
+
+    // Генерація JWT токену
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(201).json({
+      message: 'Користувача успішно зареєстровано',
+      token,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Помилка сервера' });
   }
+};
+
+// Отримати профіль користувача
+export const getUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);  // використовуємо ID з токена
+
+  if (!user) {
+    res.status(404);
+    throw new Error('Користувача не знайдено');
+  }
+
+  res.json({
+    id: user._id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    phone: user.phone,
+    isAdmin: user.isAdmin,
+  });
 });
 
-export const loginUser = asyncHandler(async (req, res) => {
+// Логін користувача
+export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
-
-  if (user && (await user.matchPassword(password))) {
-    res.json({
-      _id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone,
-      isAdmin: user.isAdmin,
-      token: generateToken(user._id),
-    });
-  } else {
-    res.status(401);
-    throw new Error('Invalid email or password');
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Будь ласка, надайте email та пароль' });
   }
-});
+
+  try {
+    // Пошук користувача за email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Невірний email або пароль' });
+    }
+
+    // Перевірка пароля
+    const isMatch = await user.matchPassword(password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Невірний email або пароль' });
+    }
+
+    // Генерація JWT токену
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({
+      message: 'Логін успішний',
+      token,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Помилка сервера' });
+  }
+};

@@ -1,26 +1,29 @@
+// backend/middleware/authMiddleware.js
 import jwt from 'jsonwebtoken';
+import { User } from '../models/userModel.js';
 
-export const protect = (req, res, next) => {
+const protect = async (req, res, next) => {
   let token;
 
-  // Перевірка наявності токену в заголовках
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
-      token = req.headers.authorization.split(' ')[1];  // Отримуємо токен з заголовка
+      token = req.headers.authorization.split(' ')[1];  // отримуємо токен
 
-      // Декодуємо токен
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Додаємо інформацію про користувача в запит
-      req.user = decoded;
+      req.user = await User.findById(decoded.id).select('-password');  // додаємо користувача до запиту
+
       next();
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Неавторизований' });
+      res.status(401);
+      throw new Error('Не авторизовано, токен недійсний');
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Неавторизований, немає токену' });
+    res.status(401);
+    throw new Error('Не авторизовано, токен відсутній');
   }
 };
+
+export { protect };
