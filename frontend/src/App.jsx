@@ -14,7 +14,12 @@ import { store } from './store';
 function App() {
   return (
     <Provider store={store}>
-      <Router>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <MainLayout>
           <Routes>
             <Route path="/" element={<HomePage />} />
