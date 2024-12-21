@@ -13,8 +13,9 @@ const initialProducts = [
     price: 299.99,
     category: 'Power Tools',
     stock: 15,
-    image: 'https://images.unsplash.com/photo-1504148455328-c376907d081c'
-  },{
+    image: 'https://images.unsplash.com/photo-1504148455328-c376907d081c',
+  },
+  {
     id: 2,
     name: 'Premium Paint Set',
     price: 89.99,
@@ -44,27 +45,18 @@ const initialProducts = [
     category: 'Plumbing',
     badge: 'Sale',
   },
+
   // Інші продукти...
 ];
 
 export function ProductsPage() {
   const { isMobile } = useResponsive();
 
-  const {
-    filters,
-    filteredProducts,
-    updateFilter,
-    clearFilters
-  } = useProductFilters(initialProducts);
+  const { filters, filteredProducts, updateFilter, clearFilters } =
+    useProductFilters(initialProducts);
 
-  const {
-    currentPage,
-    paginatedItems,
-    goToPage,
-    nextPage,
-    previousPage,
-    totalPages
-  } = usePagination(filteredProducts);
+  const { currentPage, paginatedItems, goToPage, nextPage, previousPage, totalPages } =
+    usePagination(filteredProducts);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

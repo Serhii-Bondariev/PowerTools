@@ -2,45 +2,45 @@ import {
   Paintbrush,
   Ruler,
   Wrench,
-  Zap // для іконки Power Tools
-} from "lucide-react";
-import React from "react";
+  Zap, // для іконки Power Tools
+} from 'lucide-react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
 export function Hero() {
   const categories = [
     {
       id: 1,
-      title: "Power Tools",
-      description: "Professional-grade power tools for every project",
+      title: 'Power Tools',
+      description: 'Professional-grade power tools for every project',
       icon: Zap,
-      color: "blue",
-      link: "/categories/power-tools"
+      color: 'blue',
+      link: '/categories/power-tools',
     },
     {
       id: 2,
-      title: "Paint & Supplies",
-      description: "Premium paints and supplies for any surface",
+      title: 'Paint & Supplies',
+      description: 'Premium paints and supplies for any surface',
       icon: Paintbrush,
-      color: "green",
-      link: "/categories/paint-supplies"
+      color: 'green',
+      link: '/categories/paint-supplies',
     },
     {
       id: 3,
-      title: "Measuring Tools",
-      description: "Precise measuring tools for accurate results",
+      title: 'Measuring Tools',
+      description: 'Precise measuring tools for accurate results',
       icon: Ruler,
-      color: "red",
-      link: "/categories/measuring-tools"
+      color: 'red',
+      link: '/categories/measuring-tools',
     },
     {
       id: 4,
-      title: "Plumbing",
-      description: "Complete range of plumbing tools and supplies",
+      title: 'Plumbing',
+      description: 'Complete range of plumbing tools and supplies',
       icon: Wrench,
-      color: "purple",
-      link: "/categories/plumbing"
-    }
+      color: 'purple',
+      link: '/categories/plumbing',
+    },
   ];
 
   return (
@@ -61,8 +61,7 @@ export function Hero() {
             Build Your Dreams With Us
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-2xl">
-            Discover premium tools and equipment for all your DIY projects and
-            professional needs
+            Discover premium tools and equipment for all your DIY projects and professional needs
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
@@ -83,28 +82,20 @@ export function Hero() {
 
       {/* Categories Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
-          Popular Categories
-        </h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Popular Categories</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {categories.map((category) => {
             const IconComponent = category.icon;
             return (
-              <Link
-                key={category.id}
-                to={category.link}
-                className="group"
-              >
+              <Link key={category.id} to={category.link} className="group">
                 <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300">
-                  <div className={`bg-${category.color}-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-${category.color}-200 transition duration-300`}>
+                  <div
+                    className={`bg-${category.color}-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-${category.color}-200 transition duration-300`}
+                  >
                     <IconComponent className={`h-6 w-6 text-${category.color}-600`} />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {category.title}
-                  </h3>
-                  <p className="text-gray-600">
-                    {category.description}
-                  </p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{category.title}</h3>
+                  <p className="text-gray-600">{category.description}</p>
                 </div>
               </Link>
             );
