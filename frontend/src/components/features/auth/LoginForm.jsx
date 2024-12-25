@@ -16,19 +16,41 @@ export function LoginForm() {
     rememberMe: false,
   });
 
-  useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
-    return () => {
-      dispatch(clearError());
-    };
-  }, [user, navigate, dispatch]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(login({ email: formData.email, password: formData.password }));
+    console.log('Submitting login with:', formData);
+    dispatch(
+      login({
+        email: formData.email,
+        password: formData.password,
+      })
+    );
   };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   dispatch(login({ email: formData.email, password: formData.password }));
+  // };
+
+  // useEffect(() => {
+  //   if (user) {
+  //     navigate('/');
+  //   }
+  //   return () => {
+  //     dispatch(clearError());
+  //   };
+  // }, [user, navigate, dispatch]);
+
+  useEffect(() => {
+    if (user) {
+      console.log('User logged in:', user); // Додайте це логування
+      setShowWelcome(true);
+      const timer = setTimeout(() => {
+        setShowWelcome(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

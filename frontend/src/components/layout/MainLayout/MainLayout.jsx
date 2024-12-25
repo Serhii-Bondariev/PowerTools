@@ -1,14 +1,15 @@
 // src/components/layout/MainLayout/MainLayout.jsx
 import React from 'react';
-import Header from '../Header';
-import Footer from '../Footer';
+import { Outlet } from 'react-router-dom'; // Імпортуємо Outlet
+import Header from '../Header/Header';
+import Footer from '../Footer/Footer';
 
-export function MainLayout({ children }) {
+export function MainLayout() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        {children}
+        <Outlet /> {/* Тут будуть відображатися всі дочірні роути */}
       </main>
       <Footer />
     </div>
