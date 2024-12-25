@@ -3,6 +3,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import colors from 'colors';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
@@ -11,6 +14,12 @@ import { errorHandler } from './middleware/errorMiddleware.js';
 
 
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 dotenv.config();
 connectDB();
@@ -24,6 +33,7 @@ app.use(express.json());
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 // Error Handling

@@ -1,7 +1,7 @@
 // backend/models/productModel.js
 import mongoose from 'mongoose';
 
-const productSchema = new mongoose.Schema(
+const productSchema = mongoose.Schema(
   {
     name: {
       type: String,
@@ -16,29 +16,23 @@ const productSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
-    image: {
-      type: String,
-      required: true,
-    },
     category: {
       type: String,
       required: true,
     },
-    brand: {
-      type: String,
-      required: true,
-    },
-    countInStock: {
+    stock: {
       type: Number,
       required: true,
       default: 0,
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Продукт додається певним адміном
-    },
+    image: {
+      type: String,
+      required: false,
+    }
   },
-  { timestamps: true } // автоматично додає createdAt та updatedAt
+  {
+    timestamps: true,
+  }
 );
 
 export const Product = mongoose.model('Product', productSchema);

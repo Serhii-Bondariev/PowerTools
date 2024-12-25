@@ -17,15 +17,18 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../store/slices/authSlice';
 
 export function Header() {
+  // Стейти
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
+  // Хуки
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
 
   // Redux state
   const { user } = useSelector((state) => state.auth);
+  console.log('Current user:', user);
   const cartItems = useSelector((state) => state.cart.items);
   const isAdmin = user?.isAdmin === true;
 
@@ -81,12 +84,14 @@ export function Header() {
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center space-x-2">
                 <span className="text-2xl font-bold text-blue-500">🛠</span>
-                <span className="text-xl font-bold">HardwareHub</span>
+                <p className="text-xl font-bold">
+                  Hardware<span className="text-xxl font-bold text-bg-orange-500">Hub</span>
+                </p>
               </Link>
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden md:flex items-center space-x-8 ml-4">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 return (

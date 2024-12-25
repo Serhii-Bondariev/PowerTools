@@ -1,20 +1,15 @@
 // src/components/features/cart/Cart/Cart.jsx
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { useCart } from '../../../../../src/hooks/useCart';
 import { CartItem } from '../../../../pages/cart/CartItem';
 import { CartSummary } from '../../../../pages/cart/CartSummary';
 import { ShoppingBag } from 'lucide-react';
-// src/components/features/cart/Cart.jsx
-// import React from 'react';
-// import { useSelector } from 'react-redux';
-// import { CartItem } from './CartItem';
-// import { CartSummary } from './CartSummary';
-// import { ShoppingBag } from 'lucide-react';
 
 export function Cart() {
   // Отримуємо items з Redux store з перевіркою на undefined
-  const items = useSelector(state => state.cart?.items) || [];
-  const isLoading = useSelector(state => state.cart?.isLoading);
+  const items = useSelector((state) => state.cart?.items) || [];
+  const isLoading = useSelector((state) => state.cart?.isLoading);
 
   if (isLoading) {
     return <CartSkeleton />;
@@ -34,10 +29,7 @@ export function Cart() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md">
               {items.map((item) => (
-                <CartItem
-                  key={item.id}
-                  item={item}
-                />
+                <CartItem key={item.id} item={item} />
               ))}
             </div>
           </div>
@@ -56,9 +48,7 @@ function EmptyCart() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-md p-6 text-center">
           <ShoppingBag className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Your cart is empty
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
           <p className="text-gray-600 mb-4">
             Looks like you haven't added any items to your cart yet.
           </p>

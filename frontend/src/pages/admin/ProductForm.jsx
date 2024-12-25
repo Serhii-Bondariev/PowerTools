@@ -1,127 +1,187 @@
-// frontend/src/pages/admin/ProductForm.jsx
+// src/pages/admin/ProductForm.jsx
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { addProduct, editProduct } from '../../store/slices/productsSlice';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { addProduct } from '../../store/slices/productsSlice';
 
-const ProductForm = ({ product = null, isEdit = false, onClose }) => {
-  const [formData, setFormData] = useState(
-    product || {
-      name: '',
-      price: '',
-      category: '',
-      description: '',
-      countInStock: '',
-      image: '',
-    }
-  );
-
-  const [errors, setErrors] = useState({});
+export function ProductForm() {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { isLoading, error } = useSelector((state) => state.products);
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name) newErrors.name = 'Name is required';
-    if (!formData.price) newErrors.price = 'Price is required';
-    if (!formData.category) newErrors.category = 'Category is required';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    stock: '',
+    image: null,
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type, files } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'file' ? files[0] : value,
+    }));
   };
 
-  const submitHandler = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
 
     try {
-      if (isEdit) {
-        await dispatch(editProduct({ id: product._id, product: formData })).unwrap();
+      // Створюємо об'єкт з даними продукту
+      const productData = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        price: Number(formData.price),
+        category: formData.category,
+        stock: Number(formData.stock),
+      };
+
+      // Якщо є зображення, додаємо його до FormData
+      if (formData.image) {
+        const formDataWithImage = new FormData();
+        // Додаємо всі поля продукту
+        Object.keys(productData).forEach((key) => {
+          formDataWithImage.append(key, productData[key]);
+        });
+        // Додаємо зображення
+        formDataWithImage.append('image', formData.image);
+
+        console.log('Submitting with image:', formDataWithImage);
+        await dispatch(addProduct(formDataWithImage)).unwrap();
       } else {
-        await dispatch(addProduct(formData)).unwrap();
+        // Якщо немає зображення, відправляємо звичайний об'єкт
+        console.log('Submitting without image:', productData);
+        await dispatch(addProduct(productData)).unwrap();
       }
-      onClose();
-    } catch (error) {
-      setErrors({ submit: error.message });
+
+      navigate('/admin/products');
+    } catch (err) {
+      console.error('Failed to save product:', err);
     }
   };
 
   return (
-    <form onSubmit={submitHandler} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Name</label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-      </div>
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+        <h2 className="text-2xl font-bold mb-6">Add New Product</h2>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Price</label>
-          <input
-            type="number"
-            value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-        </div>
+        {error && (
+          <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Stock</label>
-          <input
-            type="number"
-            value={formData.countInStock}
-            onChange={(e) => setFormData({ ...formData, countInStock: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 required">
+              Product Name *
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Category</label>
-        <select
-          value={formData.category}
-          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="">Select category</option>
-          <option value="Power Tools">Power Tools</option>
-          <option value="Hand Tools">Hand Tools</option>
-          <option value="Plumbing">Plumbing</option>
-          <option value="Electrical">Electrical</option>
-        </select>
-        {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
-      </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 required">
+              Description *
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+              rows="4"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
-        <textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          rows={4}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 required">Category *</label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">Select Category</option>
+              <option value="Power Tools">Power Tools</option>
+              <option value="Hand Tools">Hand Tools</option>
+              <option value="Measuring Tools">Measuring Tools</option>
+              <option value="Paint & Supplies">Paint & Supplies</option>
+              <option value="Plumbing">Plumbing</option>
+            </select>
+          </div>
 
-      <div className="flex justify-end space-x-3 mt-6">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          {isEdit ? 'Update' : 'Create'}
-        </button>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Price *</label>
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                required
+                min="0"
+                step="0.01"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Stock *</label>
+              <input
+                type="number"
+                name="stock"
+                value={formData.stock}
+                onChange={handleChange}
+                required
+                min="0"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Product Image</label>
+            <input
+              type="file"
+              name="image"
+              onChange={handleChange}
+              accept="image/*"
+              className="mt-1 block w-full"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={() => navigate('/admin/products')}
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? 'Saving...' : 'Save Product'}
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   );
-};
+}
 
 export default ProductForm;

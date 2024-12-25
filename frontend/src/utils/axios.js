@@ -1,10 +1,10 @@
-// frontend/src/utils/axios.js
+// src/utils/axios.js
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'http://localhost:5000/api', // Перевірте цей URL
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'multipart/form-data', // Змінено для підтримки завантаження файлів
   },
 });
 

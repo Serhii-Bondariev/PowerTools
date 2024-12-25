@@ -10,10 +10,10 @@ import AdminLayout from './components/layout/AdminLayout/AdminLayout';
 
 // Pages
 import HomePage from './pages/home/HomePage';
-import ProductsPage from './pages/products/ProductsPage';
+import Products from './pages/products/Products';
 import CartPage from './pages/cart/CartPage';
 import ContactPage from './pages/contacts/ContactPage';
-import OrdersPage from './pages/orders/OrdersPage'; // Переконайтеся, що цей імпорт є
+import OrdersPage from './pages/orders/OrdersPage';
 
 // Auth Pages
 import { LoginForm } from './components/features/auth/LoginForm';
@@ -25,6 +25,8 @@ import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import ProductForm from './pages/admin/ProductForm';
+import ProductList from './pages/admin/ProductList';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -36,6 +38,17 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return children;
+};
+
+// Admin Route Component
+const AdminRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!user.isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <ProtectedRoute>{children}</ProtectedRoute>;
 };
 
 function App() {
@@ -52,13 +65,15 @@ function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <AdminLayout />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           >
             <Route index element={<AdminDashboard />} />
-            <Route path="products" element={<AdminProductsPage />} />
+            <Route path="products" element={<ProductList />} />
+            <Route path="products/new" element={<ProductForm />} />
+            <Route path="products/edit/:id" element={<ProductForm />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
@@ -67,13 +82,12 @@ function App() {
           {/* Public and Protected Routes */}
           <Route element={<MainLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="products" element={<ProductsPage />} />
-            <Route path="products/:id" element={<ProductsPage />} />
+            <Route path="products" element={<Products />} />
+            <Route path="products/:id" element={<Products />} />
             <Route path="cart" element={<CartPage />} />
             <Route path="contacts" element={<ContactPage />} />
             <Route path="login" element={<LoginForm />} />
             <Route path="register" element={<RegisterForm />} />
-            {/* Захищений роут для замовлень */}
             <Route
               path="orders"
               element={

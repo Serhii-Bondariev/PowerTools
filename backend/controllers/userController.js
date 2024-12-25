@@ -4,50 +4,92 @@ import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+// Функція генерації токена (перемістити на початок файлу)
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '30d'
+  });
+};
+
 // Реєстрація користувача
-export const registerUser = async (req, res) => {
+export const registerUser = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
 
   if (!firstName || !lastName || !email || !password) {
-    return res.status(400).json({ message: 'Будь ласка, надайте всі необхідні дані' });
+    res.status(400);
+    throw new Error('Будь ласка, надайте всі необхідні дані');
   }
 
-  try {
-    // Перевірка, чи існує користувач з таким email
-    const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ email });
 
-    if (userExists) {
-      return res.status(400).json({ message: 'Користувач з таким email вже існує' });
-    }
+  if (userExists) {
+    res.status(400);
+    throw new Error('Користувач з таким email вже існує');
+  }
 
-    // Створення нового користувача
-    const user = new User({
-      firstName,
-      lastName,
-      email,
-      password,
-      phone,
-    });
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Збереження користувача
-    await user.save();
+  const user = await User.create({
+    firstName,
+    lastName,
+    email,
+    password: hashedPassword,
+    phone
+  });
 
-    // Генерація JWT токену
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
+  if (user) {
     res.status(201).json({
-      message: 'Користувача успішно зареєстровано',
-      token,
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      isAdmin: user.isAdmin,
+      token: generateToken(user._id)
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Помилка сервера' });
   }
-};
+});
 
-// Отримати профіль користувача
+// Логін користувача
+export const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  console.log('Login attempt:', { email, password });
+
+  const user = await User.findOne({ email });
+  console.log('Found user:', user);
+
+  if (!user) {
+    res.status(401);
+    throw new Error('Користувача не знайдено');
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  console.log('Password validation:', { isValid: isPasswordValid });
+
+  if (!isPasswordValid) {
+    res.status(401);
+    throw new Error('Невірний пароль');
+  }
+
+  const userData = {
+    _id: user._id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    phone: user.phone,
+    isAdmin: user.isAdmin,
+    token: generateToken(user._id)
+  };
+
+  console.log('Sending user data:', userData);
+  res.json(userData);
+});
+
+// Отримання профілю користувача
 export const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id);  // використовуємо ID з токена
+  const user = await User.findById(req.user._id);
 
   if (!user) {
     res.status(404);
@@ -55,47 +97,50 @@ export const getUserProfile = asyncHandler(async (req, res) => {
   }
 
   res.json({
-    id: user._id,
+    _id: user._id,
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
     phone: user.phone,
-    isAdmin: user.isAdmin,
+    isAdmin: user.isAdmin
   });
 });
 
-// Логін користувача
-export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+// Оновлення профілю користувача
+export const updateUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
 
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Будь ласка, надайте email та пароль' });
-  }
+  if (user) {
+    user.firstName = req.body.firstName || user.firstName;
+    user.lastName = req.body.lastName || user.lastName;
+    user.email = req.body.email || user.email;
+    user.phone = req.body.phone || user.phone;
 
-  try {
-    // Пошук користувача за email
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(400).json({ message: 'Невірний email або пароль' });
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, salt);
     }
 
-    // Перевірка пароля
-    const isMatch = await user.matchPassword(password);
+    const updatedUser = await user.save();
 
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Невірний email або пароль' });
-    }
-
-    // Генерація JWT токену
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-    res.status(200).json({
-      message: 'Логін успішний',
-      token,
+    res.json({
+      _id: updatedUser._id,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      isAdmin: updatedUser.isAdmin,
+      token: generateToken(updatedUser._id)
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Помилка сервера' });
+  } else {
+    res.status(404);
+    throw new Error('Користувача не знайдено');
   }
-};
+});
+
+// export {
+//   registerUser,
+//   loginUser,
+//   getUserProfile,
+//   updateUserProfile
+// };
