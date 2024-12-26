@@ -7,9 +7,11 @@ export const createOrder = createAsyncThunk(
   'orders/createOrder',
   async (orderData, { rejectWithValue }) => {
     try {
-      const { data } = await api.post('/orders', orderData);
+      console.log('Sending order data:', orderData); // Для відладки
+      const { data } = await api.post('/api/orders', orderData);
       return data;
     } catch (error) {
+      console.error('Error creating order:', error.response?.data); // Для відладки
       return rejectWithValue(error.response?.data?.message || 'Failed to create order');
     }
   }

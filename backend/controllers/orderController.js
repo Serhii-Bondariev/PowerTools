@@ -6,6 +6,8 @@ import Order from '../models/orderModel.js';
 // @route   POST /api/orders
 // @access  Private
 export const createOrder = asyncHandler(async (req, res) => {
+  console.log('Received order data:', req.body); // Для відладки
+
   const {
     items,
     shippingAddress,
@@ -13,25 +15,35 @@ export const createOrder = asyncHandler(async (req, res) => {
     totalAmount
   } = req.body;
 
+  // Перевірка наявності обов'язкових полів
   if (!items || items.length === 0) {
+    console.log('No items in order'); // Для відладки
     res.status(400);
     throw new Error('No order items');
   }
 
-  const order = await Order.create({
-    user: req.user._id,
-    items,
-    shippingAddress,
-    paymentMethod,
-    totalAmount,
-    status: 'pending'
-  });
-
-  if (order) {
-    res.status(201).json(order);
-  } else {
+  if (!shippingAddress) {
     res.status(400);
-    throw new Error('Invalid order data');
+    throw new Error('No shipping address provided');
+  }
+
+  try {
+    const order = await Order.create({
+      user: req.user._id,
+      items,
+      shippingAddress,
+      paymentMethod,
+      totalAmount,
+      status: 'pending'
+    });
+
+    console.log('Order created:', order); // Для відладки
+
+    res.status(201).json(order);
+  } catch (error) {
+    console.error('Error creating order:', error); // Для відладки
+    res.status(400);
+    throw new Error(error.message);
   }
 });
 

@@ -11,6 +11,11 @@ export function CheckoutForm({ onSubmit, isProcessing, initialData }) {
     defaultValues: initialData,
   });
 
+  const onSubmitForm = (data) => {
+    console.log('Form data:', data); // Для відладки
+    onSubmit(data);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-xl font-semibold mb-6">Shipping Information</h2>
@@ -101,3 +106,4 @@ export function CheckoutForm({ onSubmit, isProcessing, initialData }) {
     </form>
   );
 }
+// export default CheckoutForm;
