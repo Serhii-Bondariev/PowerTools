@@ -1,9 +1,18 @@
-// src/features/cart/CartSummary.jsx
+// src/pages/cart/CartSummary.jsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+
 export function CartSummary({ items }) {
+  const navigate = useNavigate();
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 9.99;
+  const shipping = subtotal > 0 ? 9.99 : 0;
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
+
+  const handleCheckout = () => {
+    // Тут можна додати логіку оформлення замовлення
+    navigate('/checkout');
+  };
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
@@ -28,7 +37,10 @@ export function CartSummary({ items }) {
           </div>
         </div>
       </div>
-      <button className="w-full mt-6 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+      <button
+        onClick={handleCheckout}
+        className="w-full mt-6 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+      >
         Proceed to Checkout
       </button>
     </div>
