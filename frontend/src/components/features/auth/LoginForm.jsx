@@ -9,6 +9,7 @@ export function LoginForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, loading, error } = useSelector((state) => state.auth);
+  const [showWelcome, setShowWelcome] = useState(false); // Додайте цей стейт
 
   const [formData, setFormData] = useState({
     email: '',
@@ -32,18 +33,18 @@ export function LoginForm() {
   //   dispatch(login({ email: formData.email, password: formData.password }));
   // };
 
-  // useEffect(() => {
-  //   if (user) {
-  //     navigate('/');
-  //   }
-  //   return () => {
-  //     dispatch(clearError());
-  //   };
-  // }, [user, navigate, dispatch]);
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+    return () => {
+      dispatch(clearError());
+    };
+  }, [user, navigate, dispatch]);
 
   useEffect(() => {
     if (user) {
-      console.log('User logged in:', user); // Додайте це логування
+      console.log('User logged in:', user);
       setShowWelcome(true);
       const timer = setTimeout(() => {
         setShowWelcome(false);
