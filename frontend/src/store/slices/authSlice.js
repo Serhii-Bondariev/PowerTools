@@ -6,12 +6,16 @@ export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post('/api/users/login', { email, password }); // Змінено URL з '/users/login' на '/api/users/login'
+      console.log('Sending login request:', { email });
+      const { data } = await axios.post('/api/users/login', { email, password });
       console.log('Login response:', data);
+
+      // Зберігаємо дані в localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data));
       return data;
     } catch (error) {
+      console.error('Login error:', error.response?.data);
       return rejectWithValue(error.response?.data?.message || 'Помилка входу');
     }
   }

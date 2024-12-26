@@ -19,19 +19,26 @@ export function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitting login with:', formData);
-    dispatch(
-      login({
-        email: formData.email,
-        password: formData.password,
-      })
-    );
-  };
+    console.log('Attempting login with:', {
+      email: formData.email,
+      password: formData.password,
+    });
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   dispatch(login({ email: formData.email, password: formData.password }));
-  // };
+    try {
+      const result = await dispatch(
+        login({
+          email: formData.email,
+          password: formData.password,
+        })
+      ).unwrap();
+      console.log('Login successful:', result);
+      navigate('/');
+    } catch (error) {
+      console.error('Login failed:', error);
+      // Показуємо помилку користувачу
+      setError(error.message || 'Invalid email or password');
+    }
+  };
 
   useEffect(() => {
     if (user) {

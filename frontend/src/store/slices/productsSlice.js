@@ -7,7 +7,7 @@ export const getProducts = createAsyncThunk(
   'products/getProducts',
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await api.get('/products');
+      const { data } = await api.get('/api/products');
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch products');
@@ -20,7 +20,7 @@ export const getProductById = createAsyncThunk(
   'products/getProductById',
   async (id, { rejectWithValue }) => {
     try {
-      const { data } = await api.get(`/products/${id}`);
+      const { data } = await api.get(`/api/products/${id}`);
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch product');
@@ -34,8 +34,6 @@ export const addProduct = createAsyncThunk(
   async (productData, { rejectWithValue }) => {
     try {
       let config = {};
-
-      // Перевіряємо, чи дані приходять як FormData
       if (productData instanceof FormData) {
         config = {
           headers: {
@@ -43,8 +41,7 @@ export const addProduct = createAsyncThunk(
           },
         };
       }
-
-      const { data } = await api.post('/products', productData, config);
+      const { data } = await api.post('/api/products', productData, config); // Додано /api/
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to add product');
@@ -58,7 +55,6 @@ export const updateProduct = createAsyncThunk(
   async ({ id, productData }, { rejectWithValue }) => {
     try {
       let config = {};
-
       if (productData instanceof FormData) {
         config = {
           headers: {
@@ -66,8 +62,7 @@ export const updateProduct = createAsyncThunk(
           },
         };
       }
-
-      const { data } = await api.put(`/products/${id}`, productData, config);
+      const { data } = await api.put(`/api/products/${id}`, productData, config); // Додано /api/
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update product');
@@ -80,7 +75,7 @@ export const deleteProduct = createAsyncThunk(
   'products/deleteProduct',
   async (id, { rejectWithValue }) => {
     try {
-      await api.delete(`/products/${id}`);
+      await api.delete(`/api/products/${id}`); // Додано /api/
       return id;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete product');
