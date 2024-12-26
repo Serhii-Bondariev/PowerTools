@@ -2,9 +2,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // Перевірте цей URL
+  baseURL: 'http://localhost:5000',
   headers: {
-    'Content-Type': 'multipart/form-data', // Змінено для підтримки завантаження файлів
+    'Content-Type': 'application/json',
   },
 });
 
@@ -22,15 +22,19 @@ api.interceptors.request.use(
   }
 );
 
-// Додаємо перехоплювач для обробки помилок
+// Додаємо перехоплювач для відладки
+api.interceptors.request.use((request) => {
+  console.log('Starting Request:', request);
+  return request;
+});
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('Response:', response);
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
+    console.error('Response Error:', error.response);
     return Promise.reject(error);
   }
 );

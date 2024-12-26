@@ -1,23 +1,28 @@
 // backend/routes/orderRoutes.js
 import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 import {
+  createOrder,
   getOrders,
   getOrderById,
-  createOrder,
-  updateOrder,
-  deleteOrder,
+  updateOrderStatus,
+  getMyOrders,
+  deleteOrder
 } from '../controllers/orderController.js';
 
 const router = express.Router();
 
-router.route('/')
-  .get(protect, getOrders)
-  .post(protect, createOrder);
+// Захищені роути
+router.use(protect);
 
-router.route('/:id')
-  .get(protect, getOrderById)
-  .put(protect, updateOrder)
-  .delete(protect, deleteOrder);
+// Користувацькі роути
+router.route('/').post(createOrder);
+router.get('/my-orders', getMyOrders);
+router.get('/:id', getOrderById);
+
+// Адмін роути
+router.get('/', protect, admin, getOrders);
+router.put('/:id/status', protect, admin, updateOrderStatus);
+router.delete('/:id', protect, admin, deleteOrder);
 
 export default router;

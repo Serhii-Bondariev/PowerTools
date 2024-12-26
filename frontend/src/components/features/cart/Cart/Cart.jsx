@@ -1,22 +1,19 @@
 // src/components/features/cart/Cart/Cart.jsx
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { useCart } from '../../../../../src/hooks/useCart';
+import { Link } from 'react-router-dom';
+import { ShoppingBag } from 'lucide-react';
 import { CartItem } from '../../../../pages/cart/CartItem';
 import { CartSummary } from '../../../../pages/cart/CartSummary';
-import { ShoppingBag } from 'lucide-react';
 
 export function Cart() {
-  // Отримуємо items з Redux store з перевіркою на undefined
-  const items = useSelector((state) => state.cart?.items) || [];
-  const isLoading = useSelector((state) => state.cart?.isLoading);
+  const { items, isLoading } = useSelector((state) => state.cart);
 
   if (isLoading) {
     return <CartSkeleton />;
   }
 
-  // Перевіряємо чи масив пустий
-  if (items.length === 0) {
+  if (!items || items.length === 0) {
     return <EmptyCart />;
   }
 
@@ -24,12 +21,11 @@ export function Cart() {
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md">
               {items.map((item) => (
-                <CartItem key={item.id} item={item} />
+                <CartItem key={item._id} item={item} />
               ))}
             </div>
           </div>
@@ -52,9 +48,12 @@ function EmptyCart() {
           <p className="text-gray-600 mb-4">
             Looks like you haven't added any items to your cart yet.
           </p>
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+          <Link
+            to="/products"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          >
             Continue Shopping
-          </button>
+          </Link>
         </div>
       </div>
     </div>
