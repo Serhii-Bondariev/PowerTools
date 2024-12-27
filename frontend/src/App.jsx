@@ -16,6 +16,7 @@ import ContactPage from './pages/contacts/ContactPage';
 import OrdersPage from './pages/orders/OrdersPage';
 import CheckoutPage from './pages/checkout/CheckoutPage'; // Додаємо імпорт
 import OrderSuccessPage from './pages/orders/OrderSuccessPage'; // Додаємо імпорт
+import OrderDetailsPage from './pages/orders/OrderDetailsPage';
 
 // Auth Pages
 import { LoginForm } from './components/features/auth/LoginForm';
@@ -95,17 +96,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/orders/success"
-              element={
-                <ProtectedRoute>
-                  <OrderSuccessPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="contacts" element={<ContactPage />} />
-            <Route path="login" element={<LoginForm />} />
-            <Route path="register" element={<RegisterForm />} />
+            {/* Orders Routes */}
             <Route
               path="orders"
               element={
@@ -114,6 +105,42 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="orders/:orderId"
+              element={
+                <ProtectedRoute>
+                  <OrderDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders/success"
+              element={
+                <ProtectedRoute>
+                  <OrderSuccessPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* <Route
+              path="/orders/success"
+              element={
+                <ProtectedRoute>
+                  <OrderSuccessPage />
+                </ProtectedRoute>
+              }
+            /> */}
+            <Route path="contacts" element={<ContactPage />} />
+            <Route path="login" element={<LoginForm />} />
+            <Route path="register" element={<RegisterForm />} />
+            {/* <Route
+              path="orders"
+              element={
+                <ProtectedRoute>
+                  <OrdersPage />
+                </ProtectedRoute>
+              }
+            /> */}
           </Route>
         </Routes>
       </Router>
