@@ -7,7 +7,8 @@ import {
   getOrderById,
   updateOrderStatus,
   getMyOrders,
-  deleteOrder
+  deleteOrder,
+  generateInvoice // Додаємо імпорт generateInvoice
 } from '../controllers/orderController.js';
 
 const router = express.Router();
@@ -18,6 +19,11 @@ router.use(protect);
 // Користувацькі роути
 router.route('/').post(createOrder);
 router.get('/my-orders', getMyOrders);
+
+// Роут для інвойсу має бути перед :id роутом
+router.get('/:id/invoice', generateInvoice);
+
+// Інші роути з параметром :id
 router.get('/:id', getOrderById);
 
 // Адмін роути

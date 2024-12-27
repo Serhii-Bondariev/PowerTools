@@ -1,14 +1,18 @@
 // src/pages/orders/OrdersPage.jsx
 import React, { useEffect } from 'react';
+import api from '../../utils/axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Package } from 'lucide-react';
+import { Package, Eye, Download } from 'lucide-react';
 import {
   getUserOrders,
   selectAllOrders,
   selectOrdersLoading,
   selectOrdersError,
 } from '../../store/slices/ordersSlice';
+import { formatPrice, formatDate } from '../../utils/formatters';
+import { STATUS_COLORS, PLACEHOLDER_IMAGE } from '../../utils/constants';
+import { getImageUrl } from '../../utils/helpers';
 
 export function OrdersPage() {
   const dispatch = useDispatch();
@@ -19,6 +23,42 @@ export function OrdersPage() {
   useEffect(() => {
     dispatch(getUserOrders());
   }, [dispatch]);
+
+  const handleDownloadInvoice = async (orderId) => {
+    try {
+      const response = await api.get(`/api/orders/${orderId}/invoice`, {
+        responseType: 'blob',
+        headers: {
+          Accept: 'application/pdf',
+        },
+      });
+
+      if (!response.data) {
+        throw new Error('No data received');
+      }
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${orderId}.pdf`;
+
+      // Додаємо посилання до документу
+      document.body.appendChild(link);
+
+      // Симулюємо клік
+      link.click();
+
+      // Видаляємо посилання та звільняємо URL
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      console.log('Invoice downloaded successfully');
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download invoice. Please try again.');
+    }
+  };
 
   if (isLoading) {
     return <OrdersSkeleton />;
@@ -64,38 +104,45 @@ export function OrdersPage() {
           {orders.map((order) => (
             <div key={order._id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="p-6">
+                {/* Order Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-semibold">Order #{order._id.slice(-8)}</h2>
-                    <p className="text-sm text-gray-500">
-                      Placed on {new Date(order.createdAt).toLocaleDateString()}
-                    </p>
+                    <p className="text-sm text-gray-500">Placed on {formatDate(order.createdAt)}</p>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-                      order.status
-                    )}`}
+                    className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      STATUS_COLORS[order.status.toLowerCase()]
+                    }`}
                   >
                     {order.status}
                   </span>
                 </div>
+
+                {/* Order Items */}
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flow-root">
                     <ul className="-my-6 divide-y divide-gray-200">
                       {order.items.map((item) => (
                         <li key={item._id} className="py-6 flex">
-                          <div className="flex-shrink-0 w-24 h-24">
+                          {/* Product Image */}
+                          <div className="flex-shrink-0 w-24 h-24 overflow-hidden rounded-md border border-gray-200">
                             <img
                               src={`http://localhost:5000${item.product.image}`}
                               alt={item.product.name}
-                              className="w-full h-full object-cover rounded-md"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.src = '/images/placeholder-image.png';
+                                e.target.onerror = null;
+                              }}
                             />
                           </div>
+                          {/* Product Details */}
                           <div className="ml-4 flex-1 flex flex-col">
                             <div>
                               <div className="flex justify-between text-base font-medium text-gray-900">
                                 <h3>{item.product.name}</h3>
-                                <p className="ml-4">${item.price}</p>
+                                <p className="ml-4">{formatPrice(item.price)}</p>
                               </div>
                               <p className="mt-1 text-sm text-gray-500">
                                 Quantity: {item.quantity}
@@ -107,10 +154,27 @@ export function OrdersPage() {
                     </ul>
                   </div>
                 </div>
+
+                {/* Order Summary and Actions */}
                 <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="flex justify-between text-base font-medium text-gray-900">
-                    <p>Total</p>
-                    <p>${order.totalAmount}</p>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-4">
+                      <Link
+                        to={`/orders/${order._id}`}
+                        className="flex items-center text-blue-600 hover:text-blue-800"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Details
+                      </Link>
+                      <button
+                        onClick={() => handleDownloadInvoice(order._id)}
+                        className="flex items-center text-green-600 hover:text-green-800"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download Invoice
+                      </button>
+                    </div>
+                    <div className="text-lg font-bold">Total: {formatPrice(order.totalAmount)}</div>
                   </div>
                 </div>
               </div>
@@ -141,23 +205,6 @@ function OrdersSkeleton() {
       </div>
     </div>
   );
-}
-
-function getStatusColor(status) {
-  switch (status.toLowerCase()) {
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'processing':
-      return 'bg-blue-100 text-blue-800';
-    case 'shipped':
-      return 'bg-purple-100 text-purple-800';
-    case 'delivered':
-      return 'bg-green-100 text-green-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
 }
 
 export default OrdersPage;
