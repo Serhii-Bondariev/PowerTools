@@ -1,16 +1,19 @@
 // src/utils/helpers.js
 export const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('en-US', {
+  return new Date(date).toLocaleDateString('ua-UA', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
   });
 };
 
 export function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('ua-UA', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'UAH',
   }).format(price);
 }
 
