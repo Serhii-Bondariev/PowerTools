@@ -1,45 +1,52 @@
-//src/features/auth/LoginForm.jsx
+// src/features/auth/LoginForm.jsx
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, AlertCircle } from 'lucide-react';
-import { login, clearError } from '../../../store/slices/authSlice';
+import { Mail, Lock, AlertCircle, Chrome, Facebook } from 'lucide-react';
+import { login, socialLogin, clearError } from '../../../store/slices/authSlice';
+import { useGoogleLogin } from '@react-oauth/google';
 
 export function LoginForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, loading, error } = useSelector((state) => state.auth);
-  const [showWelcome, setShowWelcome] = useState(false); // Додайте цей стейт
+  // Налаштування Google Login
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        }).then((res) => res.json());
 
+        await dispatch(
+          socialLogin({
+            provider: 'google',
+            token: tokenResponse.access_token,
+            email: userInfo.email,
+            firstName: userInfo.given_name,
+            lastName: userInfo.family_name,
+          })
+        ).unwrap();
+
+        navigate('/');
+      } catch (error) {
+        console.error('Google login failed:', error);
+        setLocalError(error || 'Google login failed');
+      }
+    },
+    onError: () => {
+      setLocalError('Failed to login with Google');
+    },
+  });
+
+  const [localError, setLocalError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false,
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log('Attempting login with:', {
-      email: formData.email,
-      password: formData.password,
-    });
-
-    try {
-      const result = await dispatch(
-        login({
-          email: formData.email,
-          password: formData.password,
-        })
-      ).unwrap();
-      console.log('Login successful:', result);
-      navigate('/');
-    } catch (error) {
-      console.error('Login failed:', error);
-      // Показуємо помилку користувачу
-      setError(error.message || 'Invalid email or password');
-    }
-  };
-
+  // Ефект для перенаправлення після успішного входу
   useEffect(() => {
     if (user) {
       navigate('/');
@@ -49,16 +56,58 @@ export function LoginForm() {
     };
   }, [user, navigate, dispatch]);
 
-  useEffect(() => {
-    if (user) {
-      console.log('User logged in:', user);
-      setShowWelcome(true);
-      const timer = setTimeout(() => {
-        setShowWelcome(false);
-      }, 3000);
-      return () => clearTimeout(timer);
+  // Обробник форми входу
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await dispatch(
+        login({
+          email: formData.email,
+          password: formData.password,
+        })
+      ).unwrap();
+    } catch (error) {
+      setLocalError(error || 'Invalid email or password');
     }
-  }, [user]);
+  };
+
+  // Налаштування Google Login
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        }).then((res) => res.json());
+
+        await dispatch(
+          socialLogin({
+            provider: 'google',
+            token: tokenResponse.access_token,
+            email: userInfo.email,
+            firstName: userInfo.given_name,
+            lastName: userInfo.family_name,
+          })
+        ).unwrap();
+
+        navigate('/');
+      } catch (error) {
+        console.error('Google login failed:', error);
+        setLocalError(error || 'Google login failed');
+      }
+    },
+    onError: () => {
+      setLocalError('Failed to login with Google');
+    },
+  });
+
+  // Обробник входу через Facebook
+  const handleFacebookLogin = async () => {
+    try {
+      await dispatch(socialLogin({ provider: 'facebook' })).unwrap();
+    } catch (error) {
+      setLocalError(error || 'Facebook login failed');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -76,14 +125,15 @@ export function LoginForm() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
+          {(error || localError) && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center">
               <AlertCircle className="h-5 w-5 mr-2" />
-              {error}
+              {error || localError}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email поле */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Email address</label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -101,6 +151,7 @@ export function LoginForm() {
               </div>
             </div>
 
+            {/* Password поле */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Password</label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -118,6 +169,7 @@ export function LoginForm() {
               </div>
             </div>
 
+            {/* Remember me і Forgot password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -141,6 +193,7 @@ export function LoginForm() {
               </div>
             </div>
 
+            {/* Submit кнопка */}
             <div>
               <button
                 type="submit"
@@ -154,6 +207,7 @@ export function LoginForm() {
             </div>
           </form>
 
+          {/* Соціальні кнопки */}
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -167,14 +221,18 @@ export function LoginForm() {
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                onClick={() => googleLogin()} // Тепер викликаємо функцію googleLogin
+                className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
+                <Chrome className="h-5 w-5 mr-2 text-red-500" />
                 Google
               </button>
               <button
                 type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                onClick={handleFacebookLogin}
+                className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
+                <Facebook className="h-5 w-5 mr-2 text-blue-600" />
                 Facebook
               </button>
             </div>
@@ -187,21 +245,71 @@ export function LoginForm() {
 
 export default LoginForm;
 
-// src/features/auth/LoginForm.jsx
-// import React, { useState } from 'react';
-// import { Mail, Lock } from 'lucide-react';
-// import { Link } from 'react-router-dom';
+// // src/features/auth/LoginForm.jsx
+// import React, { useState, useEffect } from 'react';
+// import { useDispatch, useSelector } from 'react-redux';
+// import { useNavigate, Link } from 'react-router-dom';
+// import { Mail, Lock, AlertCircle, Chrome, Facebook } from 'lucide-react';
+// import { login, socialLogin, clearError } from '../../../store/slices/authSlice';
+// import { useGoogleLogin } from '@react-oauth/google';
+// import jwt_decode from 'jwt-decode';
 
 // export function LoginForm() {
+//   const dispatch = useDispatch();
+//   const navigate = useNavigate();
+
+//   // Отримуємо дані з Redux store
+//   const { user, loading, error } = useSelector((state) => state.auth);
+
+//   // Локальні стейти
+//   const [localError, setLocalError] = useState('');
 //   const [formData, setFormData] = useState({
 //     email: '',
 //     password: '',
 //     rememberMe: false,
 //   });
 
-//   const handleSubmit = (e) => {
+//   // Ефект для перенаправлення після успішного входу
+//   useEffect(() => {
+//     if (user) {
+//       navigate('/');
+//     }
+//     return () => {
+//       dispatch(clearError());
+//     };
+//   }, [user, navigate, dispatch]);
+
+//   // Обробник форми входу
+//   const handleSubmit = async (e) => {
 //     e.preventDefault();
-//     // Add login logic
+//     try {
+//       await dispatch(
+//         login({
+//           email: formData.email,
+//           password: formData.password,
+//         })
+//       ).unwrap();
+//     } catch (error) {
+//       setLocalError(error || 'Invalid email or password');
+//     }
+//   };
+
+//   // Обробник входу через Google
+//   const handleGoogleLogin = async () => {
+//     try {
+//       await dispatch(socialLogin({ provider: 'google' })).unwrap();
+//     } catch (error) {
+//       setLocalError(error || 'Google login failed');
+//     }
+//   };
+
+//   // Обробник входу через Facebook
+//   const handleFacebookLogin = async () => {
+//     try {
+//       await dispatch(socialLogin({ provider: 'facebook' })).unwrap();
+//     } catch (error) {
+//       setLocalError(error || 'Facebook login failed');
+//     }
 //   };
 
 //   return (
@@ -220,8 +328,15 @@ export default LoginForm;
 
 //       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
 //         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+//           {(error || localError) && (
+//             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center">
+//               <AlertCircle className="h-5 w-5 mr-2" />
+//               {error || localError}
+//             </div>
+//           )}
+
 //           <form onSubmit={handleSubmit} className="space-y-6">
-//             {/* Email Field */}
+//             {/* Email поле */}
 //             <div>
 //               <label className="block text-sm font-medium text-gray-700">Email address</label>
 //               <div className="mt-1 relative rounded-md shadow-sm">
@@ -239,7 +354,7 @@ export default LoginForm;
 //               </div>
 //             </div>
 
-//             {/* Password Field */}
+//             {/* Password поле */}
 //             <div>
 //               <label className="block text-sm font-medium text-gray-700">Password</label>
 //               <div className="mt-1 relative rounded-md shadow-sm">
@@ -257,7 +372,7 @@ export default LoginForm;
 //               </div>
 //             </div>
 
-//             {/* Remember Me and Forgot Password */}
+//             {/* Remember me і Forgot password */}
 //             <div className="flex items-center justify-between">
 //               <div className="flex items-center">
 //                 <input
@@ -281,44 +396,50 @@ export default LoginForm;
 //               </div>
 //             </div>
 
-//             {/* Submit Button */}
+//             {/* Submit кнопка */}
 //             <div>
 //               <button
 //                 type="submit"
-//                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+//                 disabled={loading}
+//                 className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+//                   loading ? 'opacity-50 cursor-not-allowed' : ''
+//                 }`}
 //               >
-//                 Sign in
+//                 {loading ? 'Signing in...' : 'Sign in'}
 //               </button>
 //             </div>
+//           </form>
 
-//             {/* Social Login Divider */}
-//             <div className="mt-6">
-//               <div className="relative">
-//                 <div className="absolute inset-0 flex items-center">
-//                   <div className="w-full border-t border-gray-300" />
-//                 </div>
-//                 <div className="relative flex justify-center text-sm">
-//                   <span className="px-2 bg-white text-gray-500">Or continue with</span>
-//                 </div>
+//           {/* Соціальні кнопки */}
+//           <div className="mt-6">
+//             <div className="relative">
+//               <div className="absolute inset-0 flex items-center">
+//                 <div className="w-full border-t border-gray-300" />
 //               </div>
-
-//               {/* Social Login Buttons */}
-//               <div className="mt-6 grid grid-cols-2 gap-3">
-//                 <button
-//                   type="button"
-//                   className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-//                 >
-//                   Google
-//                 </button>
-//                 <button
-//                   type="button"
-//                   className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-//                 >
-//                   Facebook
-//                 </button>
+//               <div className="relative flex justify-center text-sm">
+//                 <span className="px-2 bg-white text-gray-500">Or continue with</span>
 //               </div>
 //             </div>
-//           </form>
+
+//             <div className="mt-6 grid grid-cols-2 gap-3">
+//               <button
+//                 type="button"
+//                 onClick={handleGoogleLogin}
+//                 className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+//               >
+//                 <Chrome className="h-5 w-5 mr-2 text-red-500" />
+//                 Google
+//               </button>
+//               <button
+//                 type="button"
+//                 onClick={handleFacebookLogin}
+//                 className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+//               >
+//                 <Facebook className="h-5 w-5 mr-2 text-blue-600" />
+//                 Facebook
+//               </button>
+//             </div>
+//           </div>
 //         </div>
 //       </div>
 //     </div>

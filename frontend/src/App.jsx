@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // Layouts
 import MainLayout from './components/layout/MainLayout/MainLayout';
@@ -55,101 +56,102 @@ const AdminRoute = ({ children }) => {
 };
 
 function App() {
+  // Додаємо перевірку і fallback
+  const googleClientId =
+    process.env.REACT_APP_GOOGLE_CLIENT_ID ||
+    '444678457305-mbij74rt55bl4ljup26d212buhfv5ha7.apps.googleusercontent.com';
+
+  console.log('Environment Check:', {
+    fromEnv: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+    usingId: googleClientId,
+    nodeEnv: process.env.NODE_ENV,
+  });
+
+  if (!googleClientId) {
+    console.error('Google Client ID is missing!');
+    return null;
+  }
   return (
-    <Provider store={store}>
-      <Router
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true,
-        }}
-      >
-        <Routes>
-          {/* Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminLayout />
-              </AdminRoute>
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="products" element={<ProductList />} />
-            <Route path="products/new" element={<ProductForm />} />
-            <Route path="products/edit/:id" element={<ProductForm />} />
-            <Route path="users" element={<AdminUsersPage />} />
-            <Route path="orders" element={<AdminOrdersPage />} />
-            <Route path="settings" element={<AdminSettingsPage />} />
-          </Route>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <Provider store={store}>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
+          <Routes>
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<ProductList />} />
+              <Route path="products/new" element={<ProductForm />} />
+              <Route path="products/edit/:id" element={<ProductForm />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+            </Route>
 
-          {/* Public and Protected Routes */}
-          <Route element={<MainLayout />}>
-            <Route index element={<HomePage />} />
-            <Route path="products" element={<Products />} />
-            <Route path="products/:id" element={<Products />} />
-            <Route path="cart" element={<CartPage />} />
-            <Route
-              path="/checkout"
-              element={
-                <ProtectedRoute>
-                  <CheckoutPage />
-                </ProtectedRoute>
-              }
-            />
-            {/* Orders Routes */}
-            <Route
-              path="orders"
-              element={
-                <ProtectedRoute>
-                  <OrdersPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="orders/:orderId"
-              element={
-                <ProtectedRoute>
-                  <OrderDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/orders/success"
-              element={
-                <ProtectedRoute>
-                  <OrderSuccessPage />
-                </ProtectedRoute>
-              }
-            />
+            {/* Public and Protected Routes */}
+            <Route element={<MainLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="products" element={<Products />} />
+              <Route path="products/:id" element={<Products />} />
+              <Route path="cart" element={<CartPage />} />
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <CheckoutPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* <Route
-              path="/orders/success"
-              element={
-                <ProtectedRoute>
-                  <OrderSuccessPage />
-                </ProtectedRoute>
-              }
-            /> */}
-            <Route path="contacts" element={<ContactPage />} />
-            <Route path="login" element={<LoginForm />} />
-            <Route path="register" element={<RegisterForm />} />
-            {/* <Route
-              path="orders"
-              element={
-                <ProtectedRoute>
-                  <OrdersPage />
-                </ProtectedRoute>
-              }
-            /> */}
-          </Route>
-        </Routes>
-      </Router>
-    </Provider>
+              {/* Orders Routes */}
+              <Route
+                path="orders"
+                element={
+                  <ProtectedRoute>
+                    <OrdersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="orders/:orderId"
+                element={
+                  <ProtectedRoute>
+                    <OrderDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders/success"
+                element={
+                  <ProtectedRoute>
+                    <OrderSuccessPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="contacts" element={<ContactPage />} />
+              <Route path="login" element={<LoginForm />} />
+              <Route path="register" element={<RegisterForm />} />
+            </Route>
+          </Routes>
+        </Router>
+      </Provider>
+    </GoogleOAuthProvider>
   );
 }
 
 export default App;
-
 // // src/App.jsx
 // import React from 'react';
 // import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';

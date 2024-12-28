@@ -10,13 +10,45 @@ export const login = createAsyncThunk(
       const { data } = await axios.post('/api/users/login', { email, password });
       console.log('Login response:', data);
 
-      // Зберігаємо дані в localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data));
+
       return data;
     } catch (error) {
       console.error('Login error:', error.response?.data);
       return rejectWithValue(error.response?.data?.message || 'Помилка входу');
+    }
+  }
+);
+
+export const socialLogin = createAsyncThunk(
+  'auth/socialLogin',
+  async ({ provider, token, email, firstName, lastName }, { rejectWithValue }) => {
+    try {
+      console.log('Sending social login request:', {
+        provider,
+        email,
+        firstName,
+        lastName,
+      });
+
+      const { data } = await axios.post('/api/users/social-login', {
+        provider,
+        token,
+        email,
+        firstName,
+        lastName,
+      });
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data));
+
+      return data;
+    } catch (error) {
+      console.error('Social login error:', error.response?.data);
+      return rejectWithValue(
+        error.response?.data?.message || 'Помилка входу через соціальну мережу'
+      );
     }
   }
 );
@@ -50,6 +82,18 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(login.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(socialLogin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(socialLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(socialLogin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

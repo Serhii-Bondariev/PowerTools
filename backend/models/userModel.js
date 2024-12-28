@@ -31,6 +31,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: false,
   },
+  socialProvider: {
+    type: String,
+    enum: ['google', 'facebook', null],
+    default: null
+  }
 }, {
   timestamps: true, // Додаємо часові мітки для створення та оновлення
 });
