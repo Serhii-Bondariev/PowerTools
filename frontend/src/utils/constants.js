@@ -14,7 +14,7 @@ export const NAVIGATION_LINKS = [
   { name: 'Products', path: '/products' },
   { name: 'Cart', path: '/cart' },
 ];
-// Order statuses
+
 export const ORDER_STATUSES = {
   PENDING: 'pending',
   PROCESSING: 'processing',
