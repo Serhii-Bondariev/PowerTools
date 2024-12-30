@@ -60,14 +60,27 @@ export function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await dispatch(
+      console.log('Login attempt with:', {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      const result = await dispatch(
         login({
           email: formData.email,
           password: formData.password,
         })
       ).unwrap();
+
+      console.log('Login successful:', result);
+      navigate('/');
     } catch (error) {
-      setLocalError(error || 'Invalid email or password');
+      console.error('Login failed:', {
+        error,
+        message: error.message,
+        stack: error.stack,
+      });
+      setLocalError(error.message || 'Failed to login');
     }
   };
 

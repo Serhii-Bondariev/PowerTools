@@ -42,19 +42,35 @@ const userSchema = new mongoose.Schema({
 
 // Метод для порівняння паролів
 userSchema.methods.matchPassword = async function(enteredPassword) {
+  console.log('Comparing passwords:', {
+    entered: enteredPassword,
+    stored: this.password
+  });
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Хешуємо пароль перед збереженням
+// При реєстрації
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
-    return next();  // Якщо пароль не змінювався, не потрібно хешувати його знову
+    next();
   }
-
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
+// userSchema.methods.matchPassword = async function(enteredPassword) {
+//   return await bcrypt.compare(enteredPassword, this.password);
+// };
+
+// // Хешуємо пароль перед збереженням
+// userSchema.pre('save', async function(next) {
+//   if (!this.isModified('password')) {
+//     return next();  // Якщо пароль не змінювався, не потрібно хешувати його знову
+//   }
+
+//   const salt = await bcrypt.genSalt(10);
+//   this.password = await bcrypt.hash(this.password, salt);
+//   next();
+// });
 
 // Створення моделі користувача на основі схеми
 export const User = mongoose.model('User', userSchema);

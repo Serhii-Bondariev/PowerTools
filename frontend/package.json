@@ -22,7 +22,9 @@
     "react-hook-form": "^7.54.2",
     "react-redux": "^9.0.4",
     "react-router-dom": "^6.20.0",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "firebase": "^11.1.0",
+    "pdfkit": "^0.15.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

@@ -34,7 +34,29 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('Response Error:', error.response);
+    console.error('Response Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+// Додаємо інтерсептор для логування
+api.interceptors.request.use(
+  (config) => {
+    console.log('Starting Request:', config);
+    return config;
+  },
+  (error) => {
+    console.error('Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => {
+    console.log('Response:', response);
+    return response;
+  },
+  (error) => {
+    console.error('Response Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );

@@ -13,33 +13,37 @@ const generateToken = (id) => {
 };
 
 // Реєстрація користувача
-export const registerUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone } = req.body;
+//
+export const registerUser = async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, phone } = req.body;
+    console.log('Registration attempt:', {
+      email,
+      password: '***',
+      firstName,
+      lastName
+    });
 
-  if (!firstName || !lastName || !email || !password) {
-    res.status(400);
-    throw new Error('Будь ласка, надайте всі необхідні дані');
-  }
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: 'Користувач вже існує' });
+    }
 
-  const userExists = await User.findOne({ email });
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      password, // Має хешуватися автоматично через pre-save hook
+      phone
+    });
 
-  if (userExists) {
-    res.status(400);
-    throw new Error('Користувач з таким email вже існує');
-  }
+    console.log('User created:', {
+      id: user._id,
+      email: user.email,
+      hashedPassword: user.password
+    });
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  const user = await User.create({
-    firstName,
-    lastName,
-    email,
-    password: hashedPassword,
-    phone
-  });
-
-  if (user) {
+    const token = generateToken(user._id);
     res.status(201).json({
       _id: user._id,
       firstName: user.firstName,
@@ -47,45 +51,56 @@ export const registerUser = asyncHandler(async (req, res) => {
       email: user.email,
       phone: user.phone,
       isAdmin: user.isAdmin,
-      token: generateToken(user._id)
+      token
     });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Помилка при реєстрації' });
   }
-});
+};
 
 // Логін користувача
-export const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  console.log('Login attempt:', { email, password });
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log('Login attempt:', { email, password: '***' });
 
-  const user = await User.findOne({ email });
-  console.log('Found user:', user);
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: 'Користувача не знайдено' });
+    }
 
-  if (!user) {
-    res.status(401);
-    throw new Error('Користувача не знайдено');
+    // Додаємо логування для відладки
+    console.log('Found user:', {
+      id: user._id,
+      email: user.email,
+      hashedPassword: user.password
+    });
+
+    const isPasswordValid = await user.matchPassword(password);
+    console.log('Password validation result:', isPasswordValid);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Невірний пароль' });
+    }
+
+    const token = generateToken(user._id);
+    res.json({
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        isAdmin: user.isAdmin
+      },
+      token
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Помилка сервера при вході' });
   }
-
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  console.log('Password validation:', { isValid: isPasswordValid });
-
-  if (!isPasswordValid) {
-    res.status(401);
-    throw new Error('Невірний пароль');
-  }
-
-  const userData = {
-    _id: user._id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    phone: user.phone,
-    isAdmin: user.isAdmin,
-    token: generateToken(user._id)
-  };
-
-  console.log('Sending user data:', userData);
-  res.json(userData);
-});
+};
 
 // Отримання профілю користувача
 export const getUserProfile = asyncHandler(async (req, res) => {

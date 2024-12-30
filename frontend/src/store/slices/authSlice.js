@@ -2,24 +2,34 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../utils/axios';
 
-export const login = createAsyncThunk(
-  'auth/login',
-  async ({ email, password }, { rejectWithValue }) => {
-    try {
-      console.log('Sending login request:', { email });
-      const { data } = await axios.post('/api/users/login', { email, password });
-      console.log('Login response:', data);
-
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
-
-      return data;
-    } catch (error) {
-      console.error('Login error:', error.response?.data);
-      return rejectWithValue(error.response?.data?.message || 'Помилка входу');
-    }
+// Асинхронні actions
+export const register = createAsyncThunk('auth/register', async (userData, { rejectWithValue }) => {
+  try {
+    const { data } = await axios.post('/api/users/register', userData);
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data));
+    return data;
+  } catch (error) {
+    console.error('Registration error:', error);
+    return rejectWithValue(error.response?.data?.message || 'Registration failed');
   }
-);
+});
+
+export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
+  try {
+    console.log('Sending login request:', credentials);
+    const { data } = await axios.post('/api/users/login', credentials);
+
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
+    return data;
+  } catch (error) {
+    console.error('Login error:', error);
+    return rejectWithValue(error.response?.data?.message || 'Failed to login');
+  }
+});
 
 export const socialLogin = createAsyncThunk(
   'auth/socialLogin',
@@ -40,12 +50,14 @@ export const socialLogin = createAsyncThunk(
         lastName,
       });
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data));
+      }
 
       return data;
     } catch (error) {
-      console.error('Social login error:', error.response?.data);
+      console.error('Social login error:', error);
       return rejectWithValue(
         error.response?.data?.message || 'Помилка входу через соціальну мережу'
       );
@@ -53,38 +65,76 @@ export const socialLogin = createAsyncThunk(
   }
 );
 
+export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+  try {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return null;
+  } catch (error) {
+    return rejectWithValue('Failed to logout');
+  }
+});
+
+// Slice
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
     user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
+    token: localStorage.getItem('token') || null,
     loading: false,
     error: null,
+    isAuthenticated: !!localStorage.getItem('token'),
   },
   reducers: {
-    logout: (state) => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      state.user = null;
-      state.error = null;
-    },
     clearError: (state) => {
       state.error = null;
+    },
+    setUser: (state, action) => {
+      state.user = action.payload;
+      state.isAuthenticated = !!action.payload;
+    },
+    setToken: (state, action) => {
+      state.token = action.payload;
+      state.isAuthenticated = !!action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
+      // Register
+      .addCase(register.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.isAuthenticated = false;
+      })
+      // Login
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.isAuthenticated = false;
       })
+      // Social Login
       .addCase(socialLogin.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -92,69 +142,32 @@ const authSlice = createSlice({
       .addCase(socialLogin.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+        state.error = null;
       })
       .addCase(socialLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.isAuthenticated = false;
+      })
+      // Logout
+      .addCase(logout.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(logout.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
+        state.error = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+      })
+      .addCase(logout.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { clearError, setUser, setToken } = authSlice.actions;
 export default authSlice.reducer;
-
-// // frontend/src/store/slices/authSlice.js
-// import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-// import api from '../../utils/axios';
-
-// export const login = createAsyncThunk(
-//   'auth/login',
-//   async ({ email, password }, { rejectWithValue }) => {
-//     try {
-//       const { data } = await api.post('/users/login', { email, password });
-//       // Зберігаємо токен та дані користувача
-//       localStorage.setItem('token', data.token);
-//       localStorage.setItem('user', JSON.stringify(data));
-//       return data.user;
-//     } catch (error) {
-//       return rejectWithValue(error.response.data.message);
-//     }
-//   }
-// );
-
-// const authSlice = createSlice({
-//   name: 'auth',
-//   initialState: {
-//     user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
-//     loading: false,
-//     error: null,
-//   },
-//   reducers: {
-//     logout: (state) => {
-//       localStorage.removeItem('token');
-//       localStorage.removeItem('user');
-//       state.user = null;
-//     },
-//     clearError: (state) => {
-//       state.error = null;
-//     },
-//   },
-//   extraReducers: (builder) => {
-//     builder
-//       .addCase(login.pending, (state) => {
-//         state.loading = true;
-//         state.error = null;
-//       })
-//       .addCase(login.fulfilled, (state, action) => {
-//         state.loading = false;
-//         state.user = action.payload;
-//       })
-//       .addCase(login.rejected, (state, action) => {
-//         state.loading = false;
-//         state.error = action.payload;
-//       });
-//   },
-// });
-
-// export const { logout, clearError } = authSlice.actions;
-// export default authSlice.reducer;
