@@ -44,3 +44,8 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.bgYellow);
 });
+
+if (!process.env.META_MAIL_FROM || !process.env.META_MAIL_PASSWORD) {
+  console.error('Email configuration is missing!');
+  process.exit(1);
+}

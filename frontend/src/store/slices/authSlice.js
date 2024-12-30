@@ -75,6 +75,19 @@ export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValu
   }
 });
 
+// Password Reset
+export const requestPasswordReset = createAsyncThunk(
+  'auth/requestPasswordReset',
+  async ({ email }, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post('/api/users/forgot-password', { email });
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to send reset request');
+    }
+  }
+);
+
 // Slice
 const authSlice = createSlice({
   name: 'auth',
@@ -163,6 +176,19 @@ const authSlice = createSlice({
         state.loading = false;
       })
       .addCase(logout.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      //requestPasswordReset
+      .addCase(requestPasswordReset.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(requestPasswordReset.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(requestPasswordReset.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
