@@ -15,6 +15,7 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/social-login', socialLoginUser);
 router.route('/profile')
+
   .get(protect, getUserProfile)
   .put(protect, updateUserProfile);
 
