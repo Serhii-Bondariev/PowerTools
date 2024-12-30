@@ -10,7 +10,7 @@ import {
   selectOrdersLoading,
   selectOrdersError,
 } from '../../store/slices/ordersSlice';
-import { formatPrice, formatDate } from '../../utils/formatters';
+import { formatPrice, formatDate } from '../../utils/helpers';
 import { PLACEHOLDER_IMAGE } from '../../utils/constants';
 
 export function OrderDetailsPage() {
