@@ -62,17 +62,35 @@ export const getMyOrders = asyncHandler(async (req, res) => {
 // @route   GET /api/orders/:id
 // @access  Private
 export const getOrderById = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id)
+  const order = await Order.findById(req.params.id) // Змінено з orderId на id
     .populate('user', 'name email')
     .populate('items.product');
 
-  if (order) {
-    res.json(order);
-  } else {
+  if (!order) {
     res.status(404);
     throw new Error('Order not found');
   }
+
+  // Перевірка прав доступу
+  if (req.user.isAdmin || order.user.toString() === req.user._id.toString()) {
+    res.json(order);
+  } else {
+    res.status(403);
+    throw new Error('Not authorized to view this order');
+  }
 });
+// export const getOrderById = asyncHandler(async (req, res) => {
+//   const order = await Order.findById(req.params.id)
+//     .populate('user', 'name email')
+//     .populate('items.product');
+
+//   if (order) {
+//     res.json(order);
+//   } else {
+//     res.status(404);
+//     throw new Error('Order not found');
+//   }
+// });
 
 // @desc    Get all orders
 // @route   GET /api/orders

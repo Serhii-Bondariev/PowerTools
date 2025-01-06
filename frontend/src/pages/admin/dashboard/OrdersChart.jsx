@@ -103,6 +103,7 @@ export const OrdersChart = ({ data = [] }) => {
           style: {
             colors: '#6B7280',
           },
+          formatter: (value) => `${value.toFixed(0)}`,
         },
       },
       {
@@ -117,7 +118,7 @@ export const OrdersChart = ({ data = [] }) => {
           style: {
             colors: '#6B7280',
           },
-          formatter: (value) => `$${value.toFixed(0)}`,
+          formatter: (value) => `$${value.toFixed(2)}`,
         },
       },
     ],

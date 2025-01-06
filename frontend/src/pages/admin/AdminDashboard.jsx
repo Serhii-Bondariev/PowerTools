@@ -26,6 +26,12 @@ const AdminDashboard = () => {
   const [dateRange, setDateRange] = useState('week');
   const [exportFormat, setExportFormat] = useState('csv');
 
+  // Функція форматування дати
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
   // Мемоізовані статистичні дані
   const dashboardStats = useMemo(
     () => [
@@ -79,51 +85,112 @@ const AdminDashboard = () => {
 
   // Функція експорту даних
   const handleExport = (format) => {
-    const exportData = orders.map((order) => ({
-      ID: order._id,
-      Date: format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm'),
-      Customer: `${order.user?.firstName} ${order.user?.lastName}`,
-      Amount: order.totalAmount,
-      Status: order.status,
-      Items: order.items.length,
-    }));
+    try {
+      const exportData = orders.map((order) => ({
+        ID: order._id,
+        Date: formatDate(order.createdAt),
+        Customer: order.shippingAddress?.fullName || 'N/A',
+        Amount: `$${Number(order.totalAmount).toFixed(2)}`,
+        Status: order.status,
+        Items: order.items?.length || 0,
+        PaymentMethod: order.paymentMethod,
+      }));
 
-    let content;
-    let mimeType;
-    let fileExtension;
+      let content;
+      let mimeType;
+      let fileExtension;
 
-    if (format === 'csv') {
-      const headers = Object.keys(exportData[0]);
-      const csvContent = [
-        headers.join(','),
-        ...exportData.map((row) => headers.map((header) => row[header]).join(',')),
-      ].join('\n');
-      content = csvContent;
-      mimeType = 'text/csv';
-      fileExtension = 'csv';
-    } else {
-      content = JSON.stringify(exportData, null, 2);
-      mimeType = 'application/json';
-      fileExtension = 'json';
+      if (format === 'csv') {
+        const headers = Object.keys(exportData[0]);
+        const csvContent = [
+          headers.join(','),
+          ...exportData.map((row) => headers.map((header) => row[header]).join(',')),
+        ].join('\n');
+        content = csvContent;
+        mimeType = 'text/csv';
+        fileExtension = 'csv';
+      } else {
+        content = JSON.stringify(exportData, null, 2);
+        mimeType = 'application/json';
+        fileExtension = 'json';
+      }
+
+      const blob = new Blob([content], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `orders-export-${formatDate(new Date())}.${fileExtension}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export error:', error);
     }
-
-    const blob = new Blob([content], { type: mimeType });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `orders-export.${fileExtension}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
   };
 
-  // Отримання даних при монтуванні
+  // Компонент контролів
+  const ExportControls = () => (
+    <div className="flex items-center space-x-4">
+      <div className="relative">
+        <select
+          value={dateRange}
+          onChange={(e) => setDateRange(e.target.value)}
+          className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="year">This Year</option>
+        </select>
+        <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+      </div>
+
+      <div className="relative inline-block">
+        <select
+          value={exportFormat}
+          onChange={(e) => setExportFormat(e.target.value)}
+          className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="csv">CSV</option>
+          <option value="json">JSON</option>
+        </select>
+        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <button
+        onClick={() => handleExport(exportFormat)}
+        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium transition-colors"
+      >
+        <Download className="h-4 w-4 mr-2" />
+        Export
+      </button>
+
+      <button
+        onClick={handleRefresh}
+        disabled={refreshing}
+        className={`inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
+          refreshing ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+      >
+        <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+        {refreshing ? 'Refreshing...' : 'Refresh'}
+      </button>
+    </div>
+  );
+
   useEffect(() => {
     dispatch(getUserOrders());
   }, [dispatch]);
 
-  // Автоматичне оновлення кожні 5 хвилин
   useEffect(() => {
     const interval = setInterval(handleRefresh, 300000);
     return () => clearInterval(interval);
@@ -134,75 +201,22 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500">
-            Last updated: {format(new Date(), 'MMM dd, yyyy HH:mm')}
-          </p>
+          <p className="text-sm text-gray-500">Last updated: {formatDate(new Date())}</p>
         </div>
-
-        <div className="flex items-center space-x-4">
-          {/* Період */}
-          <div className="flex items-center space-x-2">
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="rounded-lg border-gray-300 text-sm"
-            >
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
-            </select>
-          </div>
-
-          {/* Експорт */}
-          <div className="flex items-center space-x-2">
-            <select
-              value={exportFormat}
-              onChange={(e) => setExportFormat(e.target.value)}
-              className="rounded-lg border-gray-300 text-sm"
-            >
-              <option value="csv">CSV</option>
-              <option value="json">JSON</option>
-            </select>
-            <button
-              onClick={() => handleExport(exportFormat)}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-            >
-              <Download className="h-4 w-4" />
-              <span>Export</span>
-            </button>
-          </div>
-
-          {/* Оновлення */}
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className={`px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center space-x-2 ${
-              refreshing ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
-          </button>
-        </div>
+        <ExportControls />
       </div>
 
-      {/* Статистика */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {dashboardStats.map((stat) => (
           <StatCard key={stat.title} {...stat} />
         ))}
       </div>
 
-      {/* Графіки */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <OrdersChart data={orders} />
-
-        {/* Розподіл статусів */}
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold mb-4">Order Status Distribution</h3>
           <div className="space-y-4">
@@ -223,7 +237,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Останні замовлення */}
       <RecentOrders orders={orders.slice(0, 5)} onRefresh={handleRefresh} loading={refreshing} />
     </div>
   );
