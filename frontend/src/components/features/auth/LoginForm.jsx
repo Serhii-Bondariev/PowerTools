@@ -1,4 +1,4 @@
-// src/features/auth/LoginForm.jsx
+// src/components/features/auth/LoginForm.jsx
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
@@ -81,44 +81,6 @@ export function LoginForm() {
         stack: error.stack,
       });
       setLocalError(error.message || 'Failed to login');
-    }
-  };
-
-  // Налаштування Google Login
-  const handleGoogleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        }).then((res) => res.json());
-
-        await dispatch(
-          socialLogin({
-            provider: 'google',
-            token: tokenResponse.access_token,
-            email: userInfo.email,
-            firstName: userInfo.given_name,
-            lastName: userInfo.family_name,
-          })
-        ).unwrap();
-
-        navigate('/');
-      } catch (error) {
-        console.error('Google login failed:', error);
-        setLocalError(error || 'Google login failed');
-      }
-    },
-    onError: () => {
-      setLocalError('Failed to login with Google');
-    },
-  });
-
-  // Обробник входу через Facebook
-  const handleFacebookLogin = async () => {
-    try {
-      await dispatch(socialLogin({ provider: 'facebook' })).unwrap();
-    } catch (error) {
-      setLocalError(error || 'Facebook login failed');
     }
   };
 
@@ -231,7 +193,7 @@ export function LoginForm() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-6 grid  gap-3">
               <button
                 type="button"
                 onClick={() => googleLogin()} // Тепер викликаємо функцію googleLogin
@@ -239,14 +201,6 @@ export function LoginForm() {
               >
                 <Chrome className="h-5 w-5 mr-2 text-red-500" />
                 Google
-              </button>
-              <button
-                type="button"
-                onClick={handleFacebookLogin}
-                className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-              >
-                <Facebook className="h-5 w-5 mr-2 text-blue-600" />
-                Facebook
               </button>
             </div>
           </div>

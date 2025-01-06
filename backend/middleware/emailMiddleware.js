@@ -48,6 +48,7 @@ export const sendEmail = async (options) => {
 };
 
 export const getPasswordResetHTML = (resetUrl) => {
+  console.log('Reset URL generated:', resetUrl);
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #2563eb;">Відновлення паролю</h2>
@@ -55,12 +56,10 @@ export const getPasswordResetHTML = (resetUrl) => {
       <p>Будь ласка, перейдіть за посиланням нижче для встановлення нового паролю:</p>
       <a href="${resetUrl}"
          style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; margin: 16px 0;">
-        Відновити пароль
+        Встановити новий пароль
       </a>
       <p style="color: #666;">Це посилання дійсне протягом 1 години.</p>
       <p style="color: #666;">Якщо ви не запитували відновлення паролю, проігноруйте цей лист.</p>
-      <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
-      <p style="color: #888; font-size: 12px;">Це автоматичний лист, будь ласка, не відповідайте на нього.</p>
     </div>
   `;
 };

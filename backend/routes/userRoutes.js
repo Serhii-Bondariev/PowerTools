@@ -6,7 +6,8 @@ import {
   getUserProfile,
   updateUserProfile,
   socialLoginUser,
-  forgotPassword
+  forgotPassword,
+  resetPassword
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -16,6 +17,7 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/social-login', socialLoginUser);
 router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 router.route('/profile')
 
   .get(protect, getUserProfile)

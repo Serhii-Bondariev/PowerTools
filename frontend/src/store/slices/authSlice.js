@@ -1,6 +1,7 @@
-// src/store/slices/authSlice.js
+// frontend/src/store/slices/authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../utils/axios';
+import { clearCart } from './cartSlice';
 
 // Асинхронні actions
 export const register = createAsyncThunk('auth/register', async (userData, { rejectWithValue }) => {
@@ -19,7 +20,6 @@ export const login = createAsyncThunk('auth/login', async (credentials, { reject
   try {
     console.log('Sending login request:', credentials);
     const { data } = await axios.post('/api/users/login', credentials);
-
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -35,13 +35,6 @@ export const socialLogin = createAsyncThunk(
   'auth/socialLogin',
   async ({ provider, token, email, firstName, lastName }, { rejectWithValue }) => {
     try {
-      console.log('Sending social login request:', {
-        provider,
-        email,
-        firstName,
-        lastName,
-      });
-
       const { data } = await axios.post('/api/users/social-login', {
         provider,
         token,
@@ -49,15 +42,12 @@ export const socialLogin = createAsyncThunk(
         firstName,
         lastName,
       });
-
       if (data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data));
       }
-
       return data;
     } catch (error) {
-      console.error('Social login error:', error);
       return rejectWithValue(
         error.response?.data?.message || 'Помилка входу через соціальну мережу'
       );
@@ -65,17 +55,31 @@ export const socialLogin = createAsyncThunk(
   }
 );
 
-export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+export const logout = createAsyncThunk('auth/logout', async (_, { dispatch, rejectWithValue }) => {
   try {
+    // Очищаємо localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+
+    // Очищаємо корзину
+    dispatch(clearCart());
+
     return null;
   } catch (error) {
     return rejectWithValue('Failed to logout');
   }
 });
 
-// Password Reset
+// export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+//   try {
+//     localStorage.removeItem('token');
+//     localStorage.removeItem('user');
+//     return null;
+//   } catch (error) {
+//     return rejectWithValue('Failed to logout');
+//   }
+// });
+
 export const requestPasswordReset = createAsyncThunk(
   'auth/requestPasswordReset',
   async ({ email }, { rejectWithValue }) => {
@@ -88,7 +92,21 @@ export const requestPasswordReset = createAsyncThunk(
   }
 );
 
-// Slice
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ token, password }, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post('/api/users/reset-password', {
+        token,
+        password,
+      });
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Помилка при зміні паролю');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -179,7 +197,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      //requestPasswordReset
+      // Password Reset Request
       .addCase(requestPasswordReset.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -191,9 +209,22 @@ const authSlice = createSlice({
       .addCase(requestPasswordReset.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Reset Password
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const { clearError, setUser, setToken } = authSlice.actions;
+export const { clearError, setToken, setUser } = authSlice.actions;
 export default authSlice.reducer;

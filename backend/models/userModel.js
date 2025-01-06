@@ -1,6 +1,7 @@
 // backend/models/userModel.js
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema({
   firstName: {
@@ -45,11 +46,13 @@ const userSchema = new mongoose.Schema({
   },
   resetPasswordToken: {
     type: String,
-    default: null
+    default: null,
+    select: false
   },
   resetPasswordExpires: {
     type: Date,
-    default: null
+    default: null,
+    select: false
   },
   lastLogin: {
     type: Date,
@@ -71,7 +74,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Методи
+// Методи для роботи з паролем
 userSchema.methods.matchPassword = async function(enteredPassword) {
   try {
     return await bcrypt.compare(enteredPassword, this.password);
@@ -80,6 +83,27 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
   }
 };
 
+// Методи для скидання паролю
+userSchema.methods.createPasswordResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.resetPasswordToken = resetToken;
+  this.resetPasswordExpires = Date.now() + 3600000; // 1 година
+  return resetToken;
+};
+
+userSchema.methods.clearResetToken = function() {
+  this.resetPasswordToken = undefined;
+  this.resetPasswordExpires = undefined;
+};
+
+userSchema.methods.isResetTokenValid = function(token) {
+  return (
+    this.resetPasswordToken === token &&
+    this.resetPasswordExpires > Date.now()
+  );
+};
+
+// Методи для безпеки облікового запису
 userSchema.methods.incrementLoginAttempts = async function() {
   this.failedLoginAttempts += 1;
   if (this.failedLoginAttempts >= 5) {
@@ -95,7 +119,7 @@ userSchema.methods.resetLoginAttempts = async function() {
   await this.save();
 };
 
-// Middleware
+// Middleware для хешування паролю
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
     return next();
@@ -118,70 +142,175 @@ userSchema.virtual('isLocked').get(function() {
   return !!(this.accountLockUntil && this.accountLockUntil > new Date());
 });
 
-// Індекси - видаляємо дублювання
-userSchema.index({ resetPasswordToken: 1 });
+// Індекс для токену скидання паролю
+userSchema.index({ resetPasswordToken: 1 }, { sparse: true });
 
-export const User = mongoose.model('User', userSchema);
+// Налаштування схеми
+userSchema.set('toJSON', {
+  virtuals: true,
+  transform: function(doc, ret) {
+    delete ret.password;
+    delete ret.resetPasswordToken;
+    delete ret.resetPasswordExpires;
+    return ret;
+  }
+});
 
+// Створення моделі
+const User = mongoose.model('User', userSchema);
 
-// // backend/models/userModel.js
+export { User };
+
+ // // backend/models/userModel.js
 // import mongoose from 'mongoose';
 // import bcrypt from 'bcryptjs';
+// import crypto from 'crypto';
 
-// // Описуємо схему для користувача
 // const userSchema = new mongoose.Schema({
 //   firstName: {
 //     type: String,
-//     required: true,
+//     required: [true, 'Ім\'я обов\'язкове'],
+//     trim: true,
+//     minlength: [2, 'Ім\'я повинно містити мінімум 2 символи']
 //   },
 //   lastName: {
 //     type: String,
-//     required: true,
+//     required: [true, 'Прізвище обов\'язкове'],
+//     trim: true,
+//     minlength: [2, 'Прізвище повинно містити мінімум 2 символи']
 //   },
 //   email: {
 //     type: String,
-//     required: true,
+//     required: [true, 'Email обов\'язковий'],
 //     unique: true,
-//     match: [/^\S+@\S+\.\S+$/, 'Будь ласка, введіть коректний email'], // Додав валідацію для email
+//     trim: true,
+//     lowercase: true,
+//     match: [/^\S+@\S+\.\S+$/, 'Будь ласка, введіть коректний email']
 //   },
 //   password: {
 //     type: String,
-//     required: true,
+//     required: [true, 'Пароль обов\'язковий'],
+//     minlength: [6, 'Пароль повинен містити мінімум 6 символів']
 //   },
 //   phone: {
 //     type: String,
-//     // Можна додати валідацію для телефону, якщо потрібно
+//     trim: true,
+//     match: [/^\+?[\d\s-]{10,}$/, 'Будь ласка, введіть коректний номер телефону']
 //   },
 //   isAdmin: {
 //     type: Boolean,
 //     required: true,
-//     default: false,
+//     default: false
 //   },
 //   socialProvider: {
 //     type: String,
 //     enum: ['google', 'facebook', null],
 //     default: null
+//   },
+//   resetPasswordToken: {
+//     type: String,
+//     default: null,
+//     index: true,
+//     select: false // Не повертати токен при звичайних запитах
+//   },
+//   resetPasswordExpires: {
+//     type: Date,
+//     default: null,
+//     select: false // Не повертати дату закінчення при звичайних запитах
+//   },
+//   lastLogin: {
+//     type: Date,
+//     default: null
+//   },
+//   isActive: {
+//     type: Boolean,
+//     default: true
+//   },
+//   failedLoginAttempts: {
+//     type: Number,
+//     default: 0
+//   },
+//   accountLockUntil: {
+//     type: Date,
+//     default: null
 //   }
 // }, {
-//   timestamps: true, // Додаємо часові мітки для створення та оновлення
+//   timestamps: true
 // });
 
-// // Метод для порівняння паролів
+// // Методи
 // userSchema.methods.matchPassword = async function(enteredPassword) {
-//   console.log('Comparing passwords:', {
-//     entered: enteredPassword,
-//     stored: this.password
-//   });
-//   return await bcrypt.compare(enteredPassword, this.password);
+//   try {
+//     return await bcrypt.compare(enteredPassword, this.password);
+//   } catch (error) {
+//     throw new Error('Помилка при порівнянні паролів');
+//   }
 // };
 
-// // При реєстрації
+// // Додаємо методи для роботи з токеном
+// userSchema.methods.createPasswordResetToken = function() {
+//   // Генеруємо токен
+//   const resetToken = crypto.randomBytes(32).toString('hex');
+
+//   // Зберігаємо токен
+//   this.resetPasswordToken = resetToken;
+//   this.resetPasswordExpires = Date.now() + 3600000; // 1 година
+
+//   return resetToken;
+// };
+
+// userSchema.methods.clearResetToken = function() {
+//   this.resetPasswordToken = undefined;
+//   this.resetPasswordExpires = undefined;
+// };
+
+// userSchema.methods.isResetTokenValid = function(token) {
+//   return (
+//     this.resetPasswordToken === token &&
+//     this.resetPasswordExpires > Date.now()
+//   );
+// };
+
+// userSchema.methods.incrementLoginAttempts = async function() {
+//   this.failedLoginAttempts += 1;
+//   if (this.failedLoginAttempts >= 5) {
+//     this.accountLockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 хвилин
+//   }
+//   await this.save();
+// };
+
+// userSchema.methods.resetLoginAttempts = async function() {
+//   this.failedLoginAttempts = 0;
+//   this.accountLockUntil = null;
+//   this.lastLogin = new Date();
+//   await this.save();
+// };
+
+// // Хешування паролю
 // userSchema.pre('save', async function(next) {
 //   if (!this.isModified('password')) {
-//     next();
+//     return next();
 //   }
-//   const salt = await bcrypt.genSalt(10);
-//   this.password = await bcrypt.hash(this.password, salt);
+
+//   try {
+//     const salt = await bcrypt.genSalt(10);
+//     this.password = await bcrypt.hash(this.password, salt);
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
 // });
+
+// // Віртуальні поля
+// userSchema.virtual('fullName').get(function() {
+//   return `${this.firstName} ${this.lastName}`;
+// });
+
+// userSchema.virtual('isLocked').get(function() {
+//   return !!(this.accountLockUntil && this.accountLockUntil > new Date());
+// });
+
+// // Індекси - видаляємо дублювання
+// userSchema.index({ resetPasswordToken: 1 });
 
 // export const User = mongoose.model('User', userSchema);
