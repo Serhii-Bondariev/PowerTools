@@ -17,6 +17,7 @@ export function CheckoutSummary({ items }) {
           <div key={item._id} className="flex justify-between">
             <div>
               <p className="font-medium">{item.name}</p>
+              <img src={item.image} alt={item.name} className="w-12 h-12 bg-transparent mg-2" />
               <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
             </div>
             <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>

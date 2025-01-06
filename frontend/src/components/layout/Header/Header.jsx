@@ -15,12 +15,15 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../store/slices/authSlice';
+import { LogoutConfirmModal } from '../../common/LogoutConfirmModal';
 
 export function Header() {
   // Стейти
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   // Хуки
   const navigate = useNavigate();
   const location = useLocation();
@@ -50,12 +53,49 @@ export function Header() {
     { path: '/contacts', label: 'Contacts', icon: Phone },
   ];
 
-  // Handlers
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
-    setIsMenuOpen(false);
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+    setIsMenuOpen(false); // Закриваємо мобільне меню якщо відкрите
   };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      await dispatch(logout()).unwrap();
+      setShowLogoutModal(false);
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
+  // Змінюємо існуючу функцію handleLogout на використання нового flow
+  const handleLogout = () => {
+    handleLogoutClick(); // Замість прямого виклику logout, показуємо модальне вікно
+  };
+
+  // const handleLogoutConfirm = async () => {
+  //   try {
+  //     await dispatch(logout()).unwrap();
+  //     setShowLogoutModal(false);
+  //   } catch (error) {
+  //     console.error('Logout failed:', error);
+  //   }
+  // };
+
+  // const handleLogoutCancel = () => {
+  //   setShowLogoutModal(false);
+  // };
+
+  // // Handlers
+  // const handleLogout = () => {
+  //   dispatch(logout());
+  //   navigate('/');
+  //   setIsMenuOpen(false);
+  // };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -319,6 +359,11 @@ export function Header() {
           )}
         </div>
       </header>
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </>
   );
 }
