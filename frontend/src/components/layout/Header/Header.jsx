@@ -31,7 +31,6 @@ export function Header() {
 
   // Redux state
   const { user } = useSelector((state) => state.auth);
-  console.log('Current user:', user);
   const cartItems = useSelector((state) => state.cart.items);
   const isAdmin = user?.isAdmin === true;
 
