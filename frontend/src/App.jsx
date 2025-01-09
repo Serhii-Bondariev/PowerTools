@@ -35,6 +35,7 @@ import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import ProductForm from './pages/admin/ProductForm';
 import ProductList from './pages/admin/ProductList';
 import OrderDetailsAdmin from './pages/admin/OrderDetailsAdmin';
+import UserOrdersPage from './pages/orders/UserOrdersPage';
 
 function App() {
   return (
@@ -57,9 +58,8 @@ function App() {
               <Route path="products/edit/:id" element={<ProductForm />} />
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="orders" element={<AdminOrdersPage />} />
-              <Route path="settings" element={<AdminSettingsPage />} />
-              <Route path="orders" element={<AdminOrdersPage />} />
               <Route path="orders/:orderId" element={<OrderDetailsAdmin />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
             </Route>
 
             {/* Main Layout with Auth and Public Routes */}
@@ -77,7 +77,7 @@ function App() {
               <Route path="cart" element={<CartPage />} />
               <Route path="contacts" element={<ContactPage />} />
 
-              {/* Protected Routes */}
+              {/* Protected User Routes */}
               <Route
                 path="checkout"
                 element={
@@ -87,31 +87,33 @@ function App() {
                 }
               />
 
-              {/* Orders Routes */}
-              <Route
-                path="orders"
-                element={
-                  <ProtectedRoute>
-                    <OrdersPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders/:orderId"
-                element={
-                  <ProtectedRoute>
-                    <OrderDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="orders/success"
-                element={
-                  <ProtectedRoute>
-                    <OrderSuccessPage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* Orders Routes - Виправлено структуру */}
+              <Route path="orders">
+                <Route
+                  index
+                  element={
+                    <ProtectedRoute>
+                      <UserOrdersPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path=":orderId"
+                  element={
+                    <ProtectedRoute>
+                      <OrderDetailsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="success"
+                  element={
+                    <ProtectedRoute>
+                      <OrderSuccessPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
             </Route>
 
             {/* Catch all route - 404 */}

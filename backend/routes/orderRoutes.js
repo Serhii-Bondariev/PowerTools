@@ -22,7 +22,8 @@ router.route('/')
   .post(createOrder);        // POST /api/orders - створення замовлення (всі користувачі)
 
 // Користувацькі роути
-router.get('/my-orders', getMyOrders);  // GET /api/orders/my-orders - замовлення поточного користувача
+router.get('/my-orders', protect, getMyOrders);
+router.get('/:id', protect, getOrderById);  // GET /api/orders/my-orders - замовлення поточного користувача
 
 // Роути з параметрами (мають бути останніми)
 router.route('/:id')
