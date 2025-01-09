@@ -52,27 +52,58 @@ export const createOrder = asyncHandler(async (req, res) => {
 // @route   GET /api/orders/my-orders
 // @access  Private
 export const getMyOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ user: req.user._id })
-    .populate('items.product')
-    .sort('-createdAt');
-  res.json(orders);
-});
-
-// @desc    Get order by ID
-// @route   GET /api/orders/:id
-// @access  Private
-export const getOrderById = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id)
-    .populate('user', 'name email')
-    .populate('items.product');
-
-  if (order) {
-    res.json(order);
-  } else {
-    res.status(404);
-    throw new Error('Order not found');
+  try {
+    const orders = await Order.find({ user: req.user._id })
+      .populate('items.product')
+      .sort('-createdAt');
+    res.json(orders);
+  } catch (error) {
+    res.status(500);
+    throw new Error('Error fetching orders');
   }
 });
+
+export const getOrderById = asyncHandler(async (req, res) => {
+  try {
+    console.log('Getting order details for ID:', req.params.id);
+
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('items.product');
+
+    if (!order) {
+      console.log('Order not found');
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Перевірка прав доступу
+    if (order.user._id.toString() === req.user._id.toString() || req.user.isAdmin) {
+      console.log('Order found:', order);
+      return res.json(order);
+    } else {
+      console.log('Access denied for user:', req.user._id);
+      return res.status(403).json({ message: 'Not authorized to view this order' });
+    }
+  } catch (error) {
+    console.error('Error in getOrderById:', error);
+    return res.status(500).json({
+      message: 'Error fetching order details',
+      error: error.message
+    });
+  }
+});
+// export const getOrderById = asyncHandler(async (req, res) => {
+//   const order = await Order.findById(req.params.id)
+//     .populate('user', 'name email')
+//     .populate('items.product');
+
+//   if (order) {
+//     res.json(order);
+//   } else {
+//     res.status(404);
+//     throw new Error('Order not found');
+//   }
+// });
 
 // @desc    Get all orders
 // @route   GET /api/orders

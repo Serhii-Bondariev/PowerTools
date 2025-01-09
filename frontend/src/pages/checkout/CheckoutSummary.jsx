@@ -3,8 +3,8 @@ import React from 'react';
 
 export function CheckoutSummary({ items }) {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 9.99;
-  const tax = subtotal * 0.1;
+  const shipping = 120;
+  const tax = subtotal * 0.2;
   const total = subtotal + shipping + tax;
 
   return (
