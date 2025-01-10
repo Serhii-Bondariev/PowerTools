@@ -6,6 +6,114 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { sendEmail, getPasswordResetHTML } from '../middleware/emailMiddleware.js';
 
+
+// Отримання всіх користувачів з пагінацією та фільтрацією
+export const getUsers = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    let query = {};
+
+    // Фільтрація
+    if (req.query.role === 'admin') {
+      query.isAdmin = true;
+    }
+
+    if (req.query.status === 'active') {
+      query.isActive = true;
+    } else if (req.query.status === 'inactive') {
+      query.isActive = false;
+    }
+
+    if (req.query.search) {
+      query.$or = [
+        { firstName: { $regex: req.query.search, $options: 'i' } },
+        { lastName: { $regex: req.query.search, $options: 'i' } },
+        { email: { $regex: req.query.search, $options: 'i' } }
+      ];
+    }
+
+    // Підрахунок статистики
+    const stats = {
+      total: await User.countDocuments(),
+      active: await User.countDocuments({ isActive: true }),
+      inactive: await User.countDocuments({ isActive: false }),
+      admins: await User.countDocuments({ isAdmin: true }),
+      newThisMonth: await User.countDocuments({
+        createdAt: { $gte: new Date(new Date().setDate(1)) }
+      })
+    };
+
+    const total = await User.countDocuments(query);
+    const users = await User.find(query)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      users,
+      stats,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Помилка при отриманні користувачів' });
+  }
+};
+
+// Зміна ролі користувача
+export const updateUserRole = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Користувача не знайдено' });
+    }
+
+    user.isAdmin = !user.isAdmin;
+    await user.save();
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Помилка при зміні ролі користувача' });
+  }
+};
+
+// Зміна статусу активності користувача
+export const toggleUserStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Користувача не знайдено' });
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Помилка при зміні статусу користувача' });
+  }
+};
+
+// Видалення користувача
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Користувача не знайдено' });
+    }
+
+    await user.deleteOne(); // Замініть remove() на deleteOne()
+    res.json({ message: 'Користувача успішно видалено' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Помилка при видаленні користувача' });
+  }
+};
 // Реєстрація
 export const registerUser = async (req, res) => {
   try {
@@ -154,112 +262,6 @@ export const resetPassword = async (req, res) => {
     });
   }
 };
-
-// Відновлення паролю
-// export const forgotPassword = async (req, res) => {
-//   try {
-//     console.log('1. Starting password reset process');
-//     const { email } = req.body;
-//     console.log('2. Received email:', email);
-
-//     const user = await userService.findByEmail(email);
-//     console.log('3. User found:', user ? 'Yes' : 'No');
-
-//     if (!user) {
-//       return res.status(404).json({ message: 'Користувача не знайдено' });
-//     }
-
-//     console.log('4. Generating reset token');
-//     const resetToken = Math.random().toString(36).substring(2, 15);
-//     const hashedToken = await authService.hashPassword(resetToken);
-
-//     console.log('5. Updating user with reset token');
-//     await userService.updateUser(user._id, {
-//       resetPasswordToken: hashedToken,
-//       resetPasswordExpires: Date.now() + 3600000
-//     });
-
-//     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-//     console.log('Generated reset URL:', resetUrl); // Для перевірки
-
-//     await sendEmail({
-//       email: user.email,
-//       subject: 'Відновлення паролю на PowerTools',
-//       html: getPasswordResetHTML(resetUrl)
-//     });
-//     console.log('8. Email sent successfully');
-
-//     res.json({
-//       message: 'Інструкції з відновлення паролю відправлені на вашу пошту',
-//       success: true
-//     });
-//   } catch (error) {
-//     console.error('Detailed password reset error:', {
-//       message: error.message,
-//       stack: error.stack,
-//       details: error
-//     });
-
-//     res.status(500).json({
-//       message: 'Помилка при відправці інструкцій з відновлення паролю',
-//       details: process.env.NODE_ENV === 'development' ? error.message : undefined
-//     });
-//   }
-// };
-
-// export const resetPassword = async (req, res) => {
-//   try {
-//     console.log('Reset password request received:', {
-//       token: req.body.token ? 'exists' : 'missing',
-//       passwordLength: req.body.password ? req.body.password.length : 0
-//     });
-
-//     const { token, password } = req.body;
-
-//     if (!token || !password) {
-//       return res.status(400).json({
-//         message: 'Відсутній токен або пароль'
-//       });
-//     }
-
-//     // Знаходимо користувача за хешованим токеном
-//     const user = await User.findOne({
-//       resetPasswordToken: token,
-//       resetPasswordExpires: { $gt: Date.now() }
-//     });
-
-//     console.log('User found:', user ? 'Yes' : 'No');
-
-//     if (!user) {
-//       return res.status(400).json({
-//         message: 'Токен для відновлення паролю недійсний або застарів'
-//       });
-//     }
-
-//     // Встановлюємо новий пароль
-//     user.password = password; // Хешування відбудеться автоматично через pre-save hook
-//     user.resetPasswordToken = undefined;
-//     user.resetPasswordExpires = undefined;
-
-//     await user.save();
-//     console.log('Password successfully reset for user:', user.email);
-
-//     res.json({
-//       success: true,
-//       message: 'Пароль успішно змінено'
-//     });
-//   } catch (error) {
-//     console.error('Reset password error:', error);
-//     res.status(500).json({
-//       message: 'Помилка при зміні паролю',
-//       error: process.env.NODE_ENV === 'development' ? error.message : undefined
-//     });
-//   }
-// };
-
-// Соціальний логін
-
-
 export const socialLoginUser = async (req, res) => {
   try {
     const { provider, token, email, firstName, lastName } = req.body;
@@ -320,39 +322,7 @@ export const socialLoginUser = async (req, res) => {
     });
   }
 };
-// export const socialLoginUser = async (req, res) => {
-//   try {
-//     const { provider, token, email, firstName, lastName } = req.body;
 
-//     if (!email) {
-//       return res.status(400).json({ message: 'Email is required' });
-//     }
-
-//     if (provider === 'google') {
-//       const isValidToken = await authService.verifyGoogleToken(token, email);
-//       if (!isValidToken) {
-//         return res.status(401).json({ message: 'Invalid Google token' });
-//       }
-//     }
-
-//     let user = await userService.findByEmail(email);
-//     if (!user) {
-//       user = await userService.createSocialUser(provider, email, firstName, lastName);
-//     }
-
-//     res.json({
-//       _id: user._id,
-//       firstName: user.firstName,
-//       lastName: user.lastName,
-//       email: user.email,
-//       isAdmin: user.isAdmin,
-//       token: authService.generateToken(user._id)
-//     });
-//   } catch (error) {
-//     console.error('Social login error:', error);
-//     res.status(401).json({ message: 'Помилка автентифікації через соціальну мережу' });
-//   }
-// };
 export const getUserProfile = async (req, res) => {
   try {
     const user = await userService.findById(req.user._id);
