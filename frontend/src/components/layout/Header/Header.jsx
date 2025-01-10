@@ -76,26 +76,6 @@ export function Header() {
     handleLogoutClick(); // Замість прямого виклику logout, показуємо модальне вікно
   };
 
-  // const handleLogoutConfirm = async () => {
-  //   try {
-  //     await dispatch(logout()).unwrap();
-  //     setShowLogoutModal(false);
-  //   } catch (error) {
-  //     console.error('Logout failed:', error);
-  //   }
-  // };
-
-  // const handleLogoutCancel = () => {
-  //   setShowLogoutModal(false);
-  // };
-
-  // // Handlers
-  // const handleLogout = () => {
-  //   dispatch(logout());
-  //   navigate('/');
-  //   setIsMenuOpen(false);
-  // };
-
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -193,7 +173,7 @@ export function Header() {
                       )}
                     </span>
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">
+                  <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">
                     {isAdmin && (
                       <>
                         <Link
