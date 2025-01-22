@@ -9,6 +9,7 @@ import {
   Settings,
   Package,
   Home,
+  Heart,
   Phone,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
@@ -23,6 +24,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [email, setEmail] = useState('');
 
   // Хуки
   const navigate = useNavigate();
@@ -32,7 +34,12 @@ export function Header() {
   // Redux state
   const { user } = useSelector((state) => state.auth);
   const cartItems = useSelector((state) => state.cart.items);
+  const favoriteItems = useSelector((state) => state.products.favorites);
   const isAdmin = user?.isAdmin === true;
+
+  // Отримуємо кількість товарів в корзині та обраному
+  const cartItemsCount = useSelector((state) => state.cart?.items?.length || 0);
+  const favoritesCount = useSelector((state) => state.products?.favorites?.length || 0);
 
   // Показуємо привітальне повідомлення при логіні
   useEffect(() => {
@@ -149,6 +156,14 @@ export function Header() {
 
             {/* User Section */}
             <div className="hidden md:flex items-center space-x-4">
+              <Link to="/favorites" className="hover:text-gray-300 flex items-center relative">
+                <Heart className="h-5 w-5" />
+                {favoritesCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {favoritesCount}
+                  </span>
+                )}
+              </Link>
               {/* Cart */}
               <Link to="/cart" className="relative hover:text-gray-300">
                 <ShoppingCart className="h-6 w-6" />
@@ -265,6 +280,19 @@ export function Header() {
                     </Link>
                   );
                 })}
+
+                <Link
+                  to="/favorites"
+                  className="block px-3 py-2 rounded-md hover:bg-gray-800 flex items-center"
+                >
+                  <Heart className="h-5 w-5 mr-2" />
+                  Favorites
+                  {favoritesCount > 0 && (
+                    <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {favoritesCount}
+                    </span>
+                  )}
+                </Link>
 
                 <Link
                   to="/cart"

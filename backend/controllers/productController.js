@@ -2,6 +2,58 @@
 import asyncHandler from 'express-async-handler';
 import { Product } from '../models/productModel.js';
 
+export const toggleFavorite = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    res.status(404);
+    throw new Error('Product not found');
+  }
+  // Перевіряємо чи є масив favorites, якщо ні - створюємо
+  if (!product.favorites) {
+    product.favorites = [];
+  }
+  const userIndex = product.favorites.indexOf(req.user._id);
+  if (userIndex === -1) {
+    // Додаємо користувача до favorites
+    product.favorites.push(req.user._id);
+  } else {
+    // Видаляємо користувача з favorites
+    product.favorites.splice(userIndex, 1);
+  }
+  const updatedProduct = await product.save();
+  res.json(updatedProduct);
+});
+
+export const getFeaturedProducts = async (req, res) => {
+  try {
+    // Отримуємо продукти з найбільшою кількістю замовлень
+    const featuredProducts = await Product.aggregate([
+      {
+        $lookup: {
+          from: 'orders',
+          localField: '_id',
+          foreignField: 'items.product',
+          as: 'orders'
+        }
+      },
+      {
+        $addFields: {
+          orderCount: { $size: '$orders' }
+        }
+      },
+      {
+        $sort: { orderCount: -1 }
+      },
+      {
+        $limit: 8
+      }
+    ]);
+
+    res.json(featuredProducts);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching featured products' });
+  }
+};
 // @desc    Create a product
 // @route   POST /api/products
 // @access  Private/Admin

@@ -11,6 +11,7 @@ import MainLayout from './components/layout/MainLayout/MainLayout';
 import AdminLayout from './components/layout/AdminLayout/AdminLayout';
 
 // Pages
+
 import HomePage from './pages/home/HomePage';
 import Products from './pages/products/Products';
 import CartPage from './pages/cart/CartPage';
@@ -19,6 +20,7 @@ import OrdersPage from './pages/orders/OrdersPage';
 import CheckoutPage from './pages/checkout/CheckoutPage';
 import OrderSuccessPage from './pages/orders/OrderSuccessPage';
 import OrderDetailsPage from './pages/orders/OrderDetailsPage';
+import ProductDetails from './pages/products/ProductDetails';
 
 // Auth Pages
 import { LoginForm } from './components/features/auth/LoginForm';
@@ -36,6 +38,7 @@ import ProductForm from './pages/admin/ProductForm';
 import ProductList from './pages/admin/ProductList';
 import OrderDetailsAdmin from './pages/admin/OrderDetailsAdmin';
 import UserOrdersPage from './pages/orders/UserOrdersPage';
+import FavoritesPage from './pages/favorites/FavoritesPage';
 
 function App() {
   return (
@@ -71,6 +74,15 @@ function App() {
               <Route path="reset-password/:token" element={<ResetPasswordForm />} />
 
               {/* Public Routes */}
+              <Route path="/ProductDetails/:id" element={<ProductDetails />} />
+              <Route
+                path="favorites"
+                element={
+                  <ProtectedRoute>
+                    <FavoritesPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route index element={<HomePage />} />
               <Route path="products" element={<Products />} />
               <Route path="products/:id" element={<Products />} />
