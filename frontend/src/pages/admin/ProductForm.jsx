@@ -15,22 +15,29 @@ export function ProductForm() {
     price: '',
     category: '',
     stock: '',
-    image: null,
+    images: [], // Масив файлів
   });
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'file' ? files[0] : value,
-    }));
+
+    if (type === 'file') {
+      setFormData((prev) => ({
+        ...prev,
+        images: Array.from(files), // Масив файлів
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Створюємо об'єкт з даними продукту
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -39,24 +46,20 @@ export function ProductForm() {
         stock: Number(formData.stock),
       };
 
-      // Якщо є зображення, додаємо його до FormData
-      if (formData.image) {
-        const formDataWithImage = new FormData();
-        // Додаємо всі поля продукту
-        Object.keys(productData).forEach((key) => {
-          formDataWithImage.append(key, productData[key]);
-        });
-        // Додаємо зображення
-        formDataWithImage.append('image', formData.image);
+      const formDataWithImages = new FormData();
 
-        console.log('Submitting with image:', formDataWithImage);
-        await dispatch(addProduct(formDataWithImage)).unwrap();
-      } else {
-        // Якщо немає зображення, відправляємо звичайний об'єкт
-        console.log('Submitting without image:', productData);
-        await dispatch(addProduct(productData)).unwrap();
-      }
+      // Додаємо всі текстові поля
+      Object.keys(productData).forEach((key) => {
+        formDataWithImages.append(key, productData[key]);
+      });
 
+      // Додаємо всі зображення
+      formData.images.forEach((image) => {
+        formDataWithImages.append('images', image);
+      });
+
+      console.log('Submitting with images:', formDataWithImages);
+      await dispatch(addProduct(formDataWithImages)).unwrap();
       navigate('/admin/products');
     } catch (err) {
       console.error('Failed to save product:', err);
@@ -88,7 +91,6 @@ export function ProductForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 required">
               Description *
@@ -102,9 +104,10 @@ export function ProductForm() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 required">Category *</label>
+            <label className="block text-sm font-medium text-gray-700 required">
+              Category *
+            </label>
             <select
               name="category"
               value={formData.category}
@@ -118,12 +121,20 @@ export function ProductForm() {
               <option value="Measuring Tools">Measuring Tools</option>
               <option value="Paint & Supplies">Paint & Supplies</option>
               <option value="Plumbing">Plumbing</option>
+              <option value="Hardware">Hardware</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Carpentry">Carpentry</option>
+              <option value="Flooring">Flooring</option>
+              <option value="Roofing">Roofing</option>
+              <option value="Painting">Painting</option>
+              <option value="Other">Other</option>
             </select>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Price *</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Price *
+              </label>
               <input
                 type="number"
                 name="price"
@@ -136,7 +147,9 @@ export function ProductForm() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Stock *</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Stock *
+              </label>
               <input
                 type="number"
                 name="stock"
@@ -150,12 +163,15 @@ export function ProductForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Product Image</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Product Images
+            </label>
             <input
               type="file"
-              name="image"
+              name="images"
               onChange={handleChange}
               accept="image/*"
+              multiple // Дозволяє вибирати кілька файлів
               className="mt-1 block w-full"
             />
           </div>

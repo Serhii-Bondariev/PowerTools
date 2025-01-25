@@ -1,3 +1,4 @@
+// backend/routes/productRoutes.js
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -22,7 +23,7 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   },
 });
@@ -33,7 +34,12 @@ const fileFilter = (req, file, cb) => {
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WEBP are allowed.'), false);
+    cb(
+      new Error(
+        'Invalid file type. Only JPEG, PNG, GIF, and WEBP are allowed.',
+      ),
+      false,
+    );
   }
 };
 
@@ -50,7 +56,9 @@ const upload = multer({
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ message: 'File is too large. Maximum size is 5MB.' });
+      return res
+        .status(400)
+        .json({ message: 'File is too large. Maximum size is 5MB.' });
     }
     return res.status(400).json({ message: err.message });
   } else if (err) {
@@ -72,7 +80,7 @@ router.post(
   admin,
   upload.single('image'),
   handleMulterError,
-  createProduct
+  createProduct,
 );
 
 router.put(
@@ -81,7 +89,7 @@ router.put(
   admin,
   upload.single('image'),
   handleMulterError,
-  updateProduct
+  updateProduct,
 );
 
 router.delete('/:id', protect, admin, deleteProduct);
@@ -102,8 +110,6 @@ export default router;
 //   toggleFavorite,
 // } from '../controllers/productController.js';
 // import { protect, admin } from '../middleware/authMiddleware.js';
-
-
 
 // const router = express.Router();
 

@@ -2,8 +2,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProductById, toggleFavorite } from '../../store/slices/productsSlice';
-import { Heart, ShoppingCart, ChevronLeft, ChevronRight, Star, StarHalf } from 'lucide-react';
+import {
+  getProductById,
+  toggleFavorite,
+} from '../../store/slices/productsSlice';
+import {
+  Heart,
+  ShoppingCart,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  StarHalf,
+} from 'lucide-react';
 import { addItem } from '../../store/slices/cartSlice';
 import { ClipLoader } from 'react-spinners';
 
@@ -11,8 +21,14 @@ export default function ProductDetails() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { currentProduct: product, isLoading, error } = useSelector((state) => state.products);
-  const isFavorite = useSelector((state) => state.products.favorites.includes(id));
+  const {
+    currentProduct: product,
+    isLoading,
+    error,
+  } = useSelector((state) => state.products);
+  const isFavorite = useSelector((state) =>
+    state.products.favorites.includes(id),
+  );
 
   useEffect(() => {
     if (!product || product._id !== id) {
@@ -21,11 +37,19 @@ export default function ProductDetails() {
   }, [dispatch, id, product]);
 
   const handlePrevImage = () => {
-    setCurrentImageIndex((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
+    if (product?.images?.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? product.images.length - 1 : prev - 1,
+      );
+    }
   };
 
   const handleNextImage = () => {
-    setCurrentImageIndex((prev) => (prev === product.images.length - 1 ? 0 : prev + 1));
+    if (product?.images?.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === product.images.length - 1 ? 0 : prev + 1,
+      );
+    }
   };
 
   if (isLoading) {
@@ -53,7 +77,11 @@ export default function ProductDetails() {
   }
 
   if (!product) {
-    return <div>Product not found</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <h1 className="text-xl font-bold text-gray-500">Product not found</h1>
+      </div>
+    );
   }
 
   return (
@@ -61,7 +89,7 @@ export default function ProductDetails() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Зображення продукту */}
+            {/* Product Images */}
             <div className="relative">
               <div className="aspect-square overflow-hidden rounded-lg">
                 <img
@@ -76,7 +104,9 @@ export default function ProductDetails() {
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
                     className={`aspect-square w-20 rounded-lg overflow-hidden border-2 ${
-                      currentImageIndex === index ? 'border-blue-600' : 'border-transparent'
+                      currentImageIndex === index
+                        ? 'border-blue-600'
+                        : 'border-transparent'
                     }`}
                   >
                     <img
@@ -101,23 +131,34 @@ export default function ProductDetails() {
               </button>
             </div>
 
-            {/* Деталі продукту */}
+            {/* Product Details */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{product.name || 'No Name'}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {product.name || 'No Name'}
+              </h1>
               <div className="mt-2 flex items-center">
                 <div className="flex items-center">
                   {[...Array(Math.floor(product.rating || 0))].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                    <Star
+                      key={i}
+                      className="h-5 w-5 text-yellow-400 fill-current"
+                    />
                   ))}
                   {product.rating % 1 !== 0 && (
                     <StarHalf className="h-5 w-5 text-yellow-400 fill-current" />
                   )}
                 </div>
-                <span className="ml-2 text-gray-600">({product.reviews?.length || 0} reviews)</span>
+                <span className="ml-2 text-gray-600">
+                  ({product.reviews?.length || 0} reviews)
+                </span>
               </div>
-              <p className="mt-4 text-gray-600">{product.description || 'No Description'}</p>
+              <p className="mt-4 text-gray-600">
+                {product.description || 'No Description'}
+              </p>
               <div className="mt-6">
-                <span className="text-3xl text-gray-900">${product.price || '0.00'}</span>
+                <span className="text-3xl text-gray-900">
+                  ${product.price || '0.00'}
+                </span>
               </div>
               <div className="mt-8 space-y-4">
                 <button
@@ -134,7 +175,10 @@ export default function ProductDetails() {
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  <Heart className="h-5 w-5 mr-2" fill={isFavorite ? 'currentColor' : 'none'} />
+                  <Heart
+                    className="h-5 w-5 mr-2"
+                    fill={isFavorite ? 'currentColor' : 'none'}
+                  />
                   {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
                 </button>
               </div>

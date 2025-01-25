@@ -3,25 +3,33 @@ import asyncHandler from 'express-async-handler';
 import { Product } from '../models/productModel.js';
 
 export const toggleFavorite = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    res.status(401);
+    throw new Error('Not authorized');
+  }
+
   const product = await Product.findById(req.params.id);
   if (!product) {
     res.status(404);
     throw new Error('Product not found');
   }
-  // Перевіряємо чи є масив favorites, якщо ні - створюємо
+
   if (!product.favorites) {
     product.favorites = [];
   }
+
   const userIndex = product.favorites.indexOf(req.user._id);
   if (userIndex === -1) {
-    // Додаємо користувача до favorites
     product.favorites.push(req.user._id);
   } else {
-    // Видаляємо користувача з favorites
     product.favorites.splice(userIndex, 1);
   }
+
   const updatedProduct = await product.save();
-  res.json(updatedProduct);
+  res.json({
+    success: true,
+    data: updatedProduct,
+  });
 });
 
 export const getFeaturedProducts = async (req, res) => {
@@ -33,20 +41,20 @@ export const getFeaturedProducts = async (req, res) => {
           from: 'orders',
           localField: '_id',
           foreignField: 'items.product',
-          as: 'orders'
-        }
+          as: 'orders',
+        },
       },
       {
         $addFields: {
-          orderCount: { $size: '$orders' }
-        }
+          orderCount: { $size: '$orders' },
+        },
       },
       {
-        $sort: { orderCount: -1 }
+        $sort: { orderCount: -1 },
       },
       {
-        $limit: 8
-      }
+        $limit: 8,
+      },
     ]);
 
     res.json(featuredProducts);
@@ -54,10 +62,7 @@ export const getFeaturedProducts = async (req, res) => {
     res.status(500).json({ message: 'Error fetching featured products' });
   }
 };
-// @desc    Create a product
-// @route   POST /api/products
-// @access  Private/Admin
-// backend/controllers/productController.js
+
 const createProduct = async (req, res) => {
   try {
     const { name, description, price, category, stock } = req.body;
@@ -68,7 +73,7 @@ const createProduct = async (req, res) => {
       description,
       price: Number(price),
       category,
-      stock: Number(stock)
+      stock: Number(stock),
     };
 
     // Якщо є файл, додаємо шлях до зображення
@@ -84,43 +89,32 @@ const createProduct = async (req, res) => {
   }
 };
 
-const updateProduct = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
+//  @desc    Update a product
+//  @route   PUT /api/products/:id
+//  @access  Private/Admin
+const updateProduct = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
 
-    if (product) {
-      product.name = req.body.name || product.name;
-      product.description = req.body.description || product.description;
-      product.price = req.body.price || product.price;
-      product.category = req.body.category || product.category;
-      product.stock = req.body.stock || product.stock;
-
-      // Якщо є новий файл, оновлюємо зображення
-      if (req.file) {
-        // Видаляємо старе зображення, якщо воно існує
-        if (product.image) {
-          const oldImagePath = path.join(__dirname, '..', product.image);
-          if (fs.existsSync(oldImagePath)) {
-            fs.unlinkSync(oldImagePath);
-          }
-        }
-        product.image = `/uploads/${req.file.filename}`;
-      }
-
-      const updatedProduct = await product.save();
-      res.json(updatedProduct);
-    } else {
-      res.status(404);
-      throw new Error('Product not found');
+  if (product) {
+    product.name = req.body.name || product.name;
+    product.description = req.body.description || product.description;
+    product.price = req.body.price || product.price;
+    product.category = req.body.category || product.category;
+    product.stock = req.body.stock || product.stock;
+    if (req.file) {
+      product.image = req.file.path;
     }
-  } catch (error) {
-    res.status(400);
-    throw new Error(error.message);
+
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
+  } else {
+    res.status(404);
+    throw new Error('Product not found');
   }
-};
-// @desc    Get all products
-// @route   GET /api/products
-// @access  Public
+});
+//  @desc    Get all products
+//  @route   GET /api/products
+//  @access  Public
 const getProducts = asyncHandler(async (req, res) => {
   const products = await Product.find({});
   res.json(products);
@@ -139,30 +133,6 @@ const getProductById = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
 });
-
-// @desc    Update a product
-// @route   PUT /api/products/:id
-// @access  Private/Admin
-// const updateProduct = asyncHandler(async (req, res) => {
-//   const product = await Product.findById(req.params.id);
-
-//   if (product) {
-//     product.name = req.body.name || product.name;
-//     product.description = req.body.description || product.description;
-//     product.price = req.body.price || product.price;
-//     product.category = req.body.category || product.category;
-//     product.stock = req.body.stock || product.stock;
-//     if (req.file) {
-//       product.image = req.file.path;
-//     }
-
-//     const updatedProduct = await product.save();
-//     res.json(updatedProduct);
-//   } else {
-//     res.status(404);
-//     throw new Error('Product not found');
-//   }
-// });
 
 // @desc    Delete a product
 // @route   DELETE /api/products/:id
@@ -185,5 +155,5 @@ export {
   getProducts,
   getProductById,
   updateProduct,
-  deleteProduct
+  deleteProduct,
 };

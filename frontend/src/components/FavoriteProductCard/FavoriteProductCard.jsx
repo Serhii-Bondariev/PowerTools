@@ -1,5 +1,6 @@
+// src/components/FavoriteProductCard/FavoriteProductCard.jsx
 import React from 'react';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Heart } from 'lucide-react';
@@ -7,55 +8,76 @@ import { addProduct, toggleFavorite } from '../../store/slices/productsSlice';
 
 export default function FavoriteProductCard({ product }) {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // Для перенаправлення
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
 
   const handleAddToCart = (e) => {
-    e.stopPropagation(); // Щоб уникнути переходу при кліку на кнопку
+    e.stopPropagation();
     dispatch(addProduct(product));
     toast.success(`${product.name} додано до кошика!`);
   };
 
   const handleToggleFavorite = (e) => {
-    e.stopPropagation(); // Щоб уникнути переходу при кліку на кнопку
+    e.stopPropagation();
+    if (!user) {
+      toast.error('Будь ласка, увійдіть, щоб додати товар до улюблених');
+      return;
+    }
     dispatch(toggleFavorite(product._id));
     toast.info('Товар видалено зі списку обраного!');
   };
 
   const handleCardClick = () => {
-    navigate(`/products/${product._id}`); // Перехід на сторінку детальної інформації
+    navigate(`/products/${product._id}`);
   };
+
+  const isFavorite = product.favorites && product.favorites.includes(user?._id);
 
   return (
     <div
-      onClick={handleCardClick} // Відкриття сторінки товару
+      onClick={handleCardClick}
       className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
     >
       <div className="w-full h-48 bg-gray-200">
-        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-cover"
+        />
       </div>
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">{product.name}</h3>
-        <p className="mt-2 text-2xl font-bold text-gray-900">${product.price}</p>
+        <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
+          {product.name}
+        </h3>
+        <p className="mt-2 text-2xl font-bold text-gray-900">
+          ${product.price}
+        </p>
         <div className="mt-4 flex space-x-2">
           <button
-            onClick={handleAddToCart} // Додавання товару до кошика
+            onClick={handleAddToCart}
             className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
           >
             <ShoppingCart className="h-5 w-5 inline-block mr-2" />
             До кошика
           </button>
           <button
-            onClick={handleToggleFavorite} // Видалення з обраного
-            className="px-4 py-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition"
+            onClick={handleToggleFavorite}
+            className={`px-4 py-2 rounded-lg ${
+              isFavorite
+                ? 'bg-red-100 text-red-600'
+                : 'bg-gray-100 text-gray-600'
+            } hover:bg-gray-200 transition`}
           >
-            <Heart className="h-5 w-5" fill="currentColor" />
+            <Heart
+              className="h-5 w-5"
+              fill={isFavorite ? 'currentColor' : 'none'}
+            />
           </button>
         </div>
       </div>
     </div>
   );
 }
-
 // // src/components/FavoriteProductCard/FavoriteProductCard.jsx
 // import React from 'react';
 // import { useSelector, useDispatch } from 'react-redux';

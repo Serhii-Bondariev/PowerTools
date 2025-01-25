@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import { GoogleAuthProvider } from './providers/GoogleAuthProvider';
 import { ProtectedRoute, AdminRoute } from './providers/AuthProvider';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Layouts
 import MainLayout from './components/layout/MainLayout/MainLayout';
@@ -133,6 +134,7 @@ function App() {
           </Routes>
         </Router>
       </GoogleAuthProvider>
+      <SpeedInsights />
     </Provider>
   );
 }

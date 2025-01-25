@@ -36,7 +36,7 @@ const AdminDashboard = () => {
   const dashboardStats = useMemo(
     () => [
       {
-        title: 'Total Orders',
+        title: 'Всі замовлення',
         value: stats.total || 0,
         icon: Package,
         color: 'bg-blue-500',
@@ -44,15 +44,15 @@ const AdminDashboard = () => {
         period: 'vs last week',
       },
       {
-        title: 'Total Revenue',
-        value: `$${(stats.totalAmount || 0).toFixed(2)}`,
+        title: 'Прибуток',
+        value: `${(stats.totalAmount || 0).toFixed(2)} грн.`,
         icon: DollarSign,
         color: 'bg-green-500',
         change: '+23%',
         period: 'vs last week',
       },
       {
-        title: 'Pending Orders',
+        title: 'Скасовані замовлення',
         value: stats.byStatus?.pending || 0,
         icon: AlertTriangle,
         color: 'bg-yellow-500',
@@ -60,7 +60,7 @@ const AdminDashboard = () => {
         period: 'vs last week',
       },
       {
-        title: 'Delivered Orders',
+        title: 'Виконані замовлення',
         value: stats.byStatus?.delivered || 0,
         icon: TrendingUp,
         color: 'bg-purple-500',
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
         ID: order._id,
         Date: formatDate(order.createdAt),
         Customer: order.shippingAddress?.fullName || 'N/A',
-        Amount: `$${Number(order.totalAmount).toFixed(2)}`,
+        Amount: `${Number(order.totalAmount).toFixed(2)} грн.`,
         Status: order.status,
         Items: order.items?.length || 0,
         PaymentMethod: order.paymentMethod,
@@ -138,10 +138,10 @@ const AdminDashboard = () => {
           onChange={(e) => setDateRange(e.target.value)}
           className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-          <option value="year">This Year</option>
+          <option value="today">Сьогодні</option>
+          <option value="week">За тиждень</option>
+          <option value="month">За місяць</option>
+          <option value="year">За рік</option>
         </select>
         <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
       </div>
@@ -203,8 +203,8 @@ const AdminDashboard = () => {
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500">Last updated: {formatDate(new Date())}</p>
+          {/* <h1 className="text-2xl font-bold mgr-4  text-gray-900">Панель керування</h1> */}
+          <p className="text-sm text-gray-500">Оновлено: {formatDate(new Date())}</p>
         </div>
         <ExportControls />
       </div>

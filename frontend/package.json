@@ -1,6 +1,7 @@
 {
-  "name": "power-tool",
+  "name": "frontend",
   "version": "0.1.0",
+  "homepage": "/",
   "private": true,
   "scripts": {
     "start": "react-scripts start",
@@ -9,12 +10,14 @@
     "eject": "react-scripts eject",
     "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
     "lint:fix": "eslint --fix src/**/*.{js,jsx,ts,tsx}",
+    "precommit": "npm run lint && npm run format",
     "format": "prettier --write src/**/*.{js,jsx,ts,tsx,css,md,json}"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
     "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.0.1",
+    "@vercel/speed-insights": "^1.1.0",
     "apexcharts": "^4.3.0",
     "axios": "^1.6.2",
     "date-fns": "^4.1.0",

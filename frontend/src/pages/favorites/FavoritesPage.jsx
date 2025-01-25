@@ -1,3 +1,4 @@
+// src/pages/favorites/FavoritesPage.jsx
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
@@ -12,7 +13,9 @@ export default function FavoritesPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
         <h2 className="text-2xl font-bold text-gray-900">No Favorite Items</h2>
-        <p className="mt-4 text-gray-600">Start adding items to your favorites to see them here.</p>
+        <p className="mt-4 text-gray-600">
+          Start adding items to your favorites to see them here.
+        </p>
         <Link
           to="/products"
           className="mt-8 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
